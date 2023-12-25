@@ -19,7 +19,6 @@ const (
 )
 
 func PostContainsSupportPackage(p *Plugin, post *model.Post) ([]*model.FileInfo, []string) {
-
 	var supportPackets []*model.FileInfo
 	var names []string
 
@@ -150,7 +149,8 @@ func unmarshalPlugins(file *model.FileData) (*model.PluginsResponse, error) {
 }
 
 // Responsible for downloading, reading, and processing the support packet
-func ProcessSupportPackets(p *Plugin, packetArray []*model.FileInfo, post *model.Post) {
+func ProcessSupportPackets(p *Plugin, packetArray []*model.FileInfo, post *model.Post) ([]*model.Post, error) {
+	var posts []*model.Post
 
 	// looking through all the packets in a post as you can upload more than one.
 	for _, packet := range packetArray {
@@ -161,13 +161,13 @@ func ProcessSupportPackets(p *Plugin, packetArray []*model.FileInfo, post *model
 		var plugins *model.PluginsResponse
 
 		if err != nil {
-			return
+			return nil, err
 		}
 
 		unzippedFiles, err2 := unzipToMemory(fileData)
 		if err2 != nil {
 			p.API.LogError("Failure unpacking packet" + err2.Error())
-			return
+			return nil, err2
 		}
 
 		// looking through everything that's in the zipped file to find
@@ -191,17 +191,23 @@ func ProcessSupportPackets(p *Plugin, packetArray []*model.FileInfo, post *model
 
 			if err != nil {
 				p.API.LogError("Error parsing support packet. Error:" + err.Error())
-				return
+				return nil, err
 			}
 		}
 
-		p.API.CreatePost(&model.Post{
+		newPost, err := p.API.CreatePost(&model.Post{
 			ChannelId: post.ChannelId,
 			RootId:    post.Id,
 			UserId:    p.botID,
 			Message:   returnMarkdownResponse(packet, config, plugins),
 		})
+		if err != nil {
+			p.API.LogError("Error parsing support packet. Error:" + err.Error())
+			return nil, err
+		}
 
+		posts = append(posts, newPost)
 	}
 
+	return posts, nil
 }

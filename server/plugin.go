@@ -1,131 +1,193 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
-	"sync"
 
+	"github.com/coltoneshaw/mattermost-plugin-customers/server/api"
+	"github.com/coltoneshaw/mattermost-plugin-customers/server/app"
+	"github.com/coltoneshaw/mattermost-plugin-customers/server/bot"
+
+	// "github.com/coltoneshaw/mattermost-plugin-customers/server/command"
+	"github.com/coltoneshaw/mattermost-plugin-customers/server/config"
+	"github.com/coltoneshaw/mattermost-plugin-customers/server/sqlstore"
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/plugin"
+	pluginapi "github.com/mattermost/mattermost/server/public/pluginapi"
+	"github.com/mattermost/mattermost/server/public/pluginapi/cluster"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // Plugin implements the interface expected by the Mattermost server to communicate between the server and plugin processes.
 type Plugin struct {
 	plugin.MattermostPlugin
 
-	// configurationLock synchronizes access to the configuration.
-	configurationLock sync.RWMutex
-
-	// configuration is the active plugin configuration. Consult getConfiguration and
-	// setConfiguration for usage.
-	configuration *configuration
+	handler *api.Handler
+	config  *config.ServiceImpl
 
 	botID string
+	bot   *bot.Bot
+
+	pluginAPI       *pluginapi.Client
+	customerService app.CustomerService
 }
 
-const (
-	// todo - can i better find this ID?
-	PluginId = "com.mattermost.plugin-starter-template"
-)
+type StatusRecorder struct {
+	http.ResponseWriter
+	Status int
+}
 
-const (
-	commandSupport = "supporty"
-)
+func (r *StatusRecorder) WriteHeader(status int) {
+	r.Status = status
+	r.ResponseWriter.WriteHeader(status)
+}
 
-// ServeHTTP demonstrates a plugin that handles HTTP requests by greeting the world.
-func (p *Plugin) ServeHTTP(_ *plugin.Context, w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprint(w, p.API.GetConfig())
+// ServeHTTP routes incoming HTTP requests to the plugin's REST API.
+func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
+	p.handler.ServeHTTP(w, r)
 }
 
 // See https://developers.mattermost.com/extend/plugins/server/reference/
 
 func (p *Plugin) OnActivate() error {
-	BotInfo := &model.Bot{
+	pluginAPIClient := pluginapi.NewClient(p.API, p.Driver)
+	p.pluginAPI = pluginAPIClient
+
+	p.config = config.NewConfigService(pluginAPIClient, manifest)
+
+	logger := logrus.StandardLogger()
+	pluginapi.ConfigureLogrus(logger, pluginAPIClient)
+
+	botID, err := pluginAPIClient.Bot.EnsureBot(&model.Bot{
 		Username:    "supporty",
 		DisplayName: "Supporty the Support bot",
 		Description: "The source of truth for customer info",
-	}
-
-	botID, err := p.API.EnsureBotUser(BotInfo)
+		OwnerId:     "supporty",
+	},
+	// pluginapi.ProfileImagePath("assets/plugin_icon.png"),
+	)
 
 	if err != nil {
 		return errors.Wrapf(err, "failed to ensure bot")
 	}
 
+	err = p.config.UpdateConfiguration(func(c *config.Configuration) {
+		c.BotUserID = botID
+	})
+	if err != nil {
+		return errors.Wrapf(err, "failed save bot to config")
+	}
+
 	p.botID = botID
 
-	p.API.CreatePost(&model.Post{
-		UserId:    botID,
-		ChannelId: "jqqzh76e43bc9jmuxq1ycee6rr",
-		Message:   "hey, bud.",
-	})
+	apiClient := sqlstore.NewClient(pluginAPIClient)
+	p.bot = bot.New(pluginAPIClient, p.config.GetConfiguration().BotUserID, p.config)
+	// scheduler := cluster.GetJobOnceScheduler(p.API)
 
-	if err := p.registerCommands(); err != nil {
-		return errors.Wrap(err, "failed to register commands")
+	sqlStore, err := sqlstore.New(apiClient)
+	if err != nil {
+		return errors.Wrapf(err, "failed creating the SQL store")
 	}
+
+	customerStore := sqlstore.NewCustomerStore(apiClient, sqlStore)
+	p.handler = api.NewHandler(pluginAPIClient, p.config)
+
+	p.customerService = app.NewCustomerService(customerStore, p.bot, pluginAPIClient)
+
+	// if err = scheduler.Start(); err != nil {
+	// 	logrus.WithError(err).Error("JobOnceScheduler could not start")
+	// }
+
+	// Migrations use the scheduler, so they have to be run after playbookRunService and scheduler have started
+	mutex, err := cluster.NewMutex(p.API, "CRM_Customers")
+	if err != nil {
+		return errors.Wrap(err, "failed creating cluster mutex")
+	}
+	mutex.Lock()
+	if err = sqlStore.RunMigrations(); err != nil {
+		mutex.Unlock()
+		return errors.Wrap(err, "failed to run migrations")
+	}
+	mutex.Unlock()
+
+	api.NewCustomerHandler(
+		p.handler.APIRouter,
+		p.customerService,
+		pluginAPIClient,
+		p.config,
+	)
 
 	return nil
 }
 
-func (p *Plugin) registerCommands() error {
-	if err := p.API.RegisterCommand(&model.Command{
-		Trigger:          commandSupport,
-		Method:           "G",
-		PluginId:         PluginId,
-		AutoComplete:     true,
-		AutoCompleteDesc: "Supporty over here doing things",
-		// doesn't seem needed
-		// AutoCompleteHint: "boom boom support",
-		DisplayName: "Support name",
-	}); err != nil {
-		return errors.Wrapf(err, "failed to register plugin slash")
-	}
+// // ExecuteCommand executes a command that has been previously registered via the RegisterCommand.
+// func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
+// 	runner := command.NewCommandRunner(c, args, pluginapi.NewClient(p.API, p.Driver), p.bot, p.config)
 
-	return nil
-}
+// 	if err := runner.Execute(); err != nil {
+// 		return nil, model.NewAppError("Customers.ExecuteCommand", "app.command.execute.error", nil, err.Error(), http.StatusInternalServerError)
+// 	}
 
-func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-	trigger := strings.TrimPrefix(strings.Fields(args.Command)[0], "/")
-	switch trigger {
-	case commandSupport:
-		return p.executeSupportCommand(args), nil
+// 	return &model.CommandResponse{}, nil
+// }
 
-	default:
-		return &model.CommandResponse{
-			ResponseType: model.CommandResponseTypeEphemeral,
-			Text:         fmt.Sprintf("Unknown command: " + args.Command),
-		}, nil
-	}
-}
+// func (p *Plugin) registerCommands() error {
+// 	if err := p.API.RegisterCommand(&model.Command{
+// 		Trigger:          commandSupport,
+// 		Method:           "G",
+// 		PluginId:         PluginId,
+// 		AutoComplete:     true,
+// 		AutoCompleteDesc: "Supporty over here doing things",
+// 		// doesn't seem needed
+// 		// AutoCompleteHint: "boom boom support",
+// 		DisplayName: "Support name",
+// 	}); err != nil {
+// 		return errors.Wrapf(err, "failed to register plugin slash")
+// 	}
 
-func (p *Plugin) executeSupportCommand(args *model.CommandArgs) *model.CommandResponse {
-	p.API.CreatePost(&model.Post{
-		ChannelId: args.ChannelId,
-		UserId:    p.botID,
-		Message:   "bruhhhhh, what's up?",
-	})
-	return &model.CommandResponse{}
-}
+// 	return nil
+// }
 
-func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
-	if post.UserId == p.botID || post.RootId != "" || len(post.FileIds) == 0 {
-		return
-	}
+// func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
+// 	trigger := strings.TrimPrefix(strings.Fields(args.Command)[0], "/")
+// 	switch trigger {
+// 	case commandSupport:
+// 		return p.executeSupportCommand(args), nil
 
-	supportPackets, names := PostContainsSupportPackage(p, post)
+// 	default:
+// 		return &model.CommandResponse{
+// 			ResponseType: model.CommandResponseTypeEphemeral,
+// 			Text:         fmt.Sprintf("Unknown command: " + args.Command),
+// 		}, nil
+// 	}
+// }
 
-	if len(supportPackets) == 0 {
-		return
-	}
+// func (p *Plugin) executeSupportCommand(args *model.CommandArgs) *model.CommandResponse {
+// 	p.API.CreatePost(&model.Post{
+// 		ChannelId: args.ChannelId,
+// 		UserId:    p.botID,
+// 		Message:   "bruhhhhh, what's up?",
+// 	})
+// 	return &model.CommandResponse{}
+// }
 
-	p.API.CreatePost(&model.Post{
-		ChannelId: post.ChannelId,
-		RootId:    post.Id,
-		UserId:    p.botID,
-		Message:   "Uploading support packet for " + strings.Join(names, " ,"),
-	})
+// func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
+// 	if post.UserId == p.botID || post.RootId != "" || len(post.FileIds) == 0 {
+// 		return
+// 	}
 
-	ProcessSupportPackets(p, supportPackets, post)
-}
+// 	supportPackets, names := PostContainsSupportPackage(p, post)
+
+// 	if len(supportPackets) == 0 {
+// 		return
+// 	}
+
+// 	p.API.CreatePost(&model.Post{
+// 		ChannelId: post.ChannelId,
+// 		RootId:    post.Id,
+// 		UserId:    p.botID,
+// 		Message:   "Uploading support packet for " + strings.Join(names, " ,"),
+// 	})
+
+// 	ProcessSupportPackets(p, supportPackets, post)
+// }
