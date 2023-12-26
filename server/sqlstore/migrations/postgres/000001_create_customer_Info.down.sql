@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS CRM_Customers;
+DROP TABLE IF EXISTS crm_customers;
