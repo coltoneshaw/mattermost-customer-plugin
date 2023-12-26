@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS crm_customers (
 	zendeskId TEXT,
 	licensedTo TEXT
 	siteUrl TEXT,
-	type TEXT NOT NULL,
+	type TEXT NOT NULL
 );
