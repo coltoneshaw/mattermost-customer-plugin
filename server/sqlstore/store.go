@@ -73,16 +73,16 @@ func (sqlStore *SQLStore) getBuilder(q sqlx.Queryer, dest interface{}, b builder
 //
 // Use this to simplify querying for multiple rows (and possibly columns). Dest may be a slice of
 // a simple, or a slice of a struct with fields to be populated from the returned columns.
-// func (sqlStore *SQLStore) selectBuilder(q sqlx.Queryer, dest interface{}, b builder) error {
-// 	sqlString, args, err := b.ToSql()
-// 	if err != nil {
-// 		return errors.Wrap(err, "failed to build sql")
-// 	}
+func (sqlStore *SQLStore) selectBuilder(q sqlx.Queryer, dest interface{}, b builder) error {
+	sqlString, args, err := b.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "failed to build sql")
+	}
 
-// 	sqlString = sqlStore.db.Rebind(sqlString)
+	sqlString = sqlStore.db.Rebind(sqlString)
 
-// 	return sqlx.Select(q, dest, sqlString, args...)
-// }
+	return sqlx.Select(q, dest, sqlString, args...)
+}
 
 // execer is an interface describing a resource that can execute write queries.
 //

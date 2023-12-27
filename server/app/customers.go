@@ -10,30 +10,30 @@ type Customer struct {
 	Name string `json:"name"`
 
 	// The named CSM of the account.
-	Customer_Success_Manager string `json:"customerSuccessManager"`
+	CustomerSuccessManager string `json:"customerSuccessManager"`
 
 	// The named AE of the account.
-	Account_Executive string `json:"accountExecutive"`
+	AccountExecutive string `json:"accountExecutive"`
 
 	// The named TAM of the account.
-	Technical_Account_Manager string `json:"technicalAccountManager"`
+	TechnicalAccountManager string `json:"technicalAccountManager"`
 
 	// The Salesforce ID of the customer, manually added to the customer
-	Salesforce_ID string `json:"salesforceId"`
+	SalesforceID string `json:"salesforceId"`
 
 	// The Zendesk Org ID of the customer, manually added to the customer
-	Zendesk_ID string `json:"zendeskId"`
+	ZendeskID string `json:"zendeskId"`
 
 	// This field may be removed eventually, but this is just a way to try and do a check on
 	// who this customer belongs to when a support packet comes in
-	Licensed_To string `json:"licensed_to"`
-	Site_URL    string `json:"siteURL"`
+	LicensedTo string `json:"licensed_to"`
+	SiteURL    string `json:"siteURL"`
 
 	// LicenseType is the type of license a customer can have
 	// It can be "cloud", "enterprise", "professional", "free"
 	Type string `json:"type"`
 
-	Packet_Values CustomerPacketValues `json:"packet"`
+	PacketValues CustomerPacketValues `json:"packet"`
 
 	Plugins []CustomerPluginValues `json:"plugins"`
 
@@ -41,12 +41,12 @@ type Customer struct {
 }
 
 type CustomerPacketValues struct {
-	Licensed_To           string `json:"licensedTo"`
+	LicensedTo            string `json:"licensedTo"`
 	Version               string `json:"version"`
-	Server_OS             string `json:"serverOS"`
-	Server_Arch           string `json:"serverArch"`
-	Database_Type         string `json:"databaseType"` // `mysql` or `postgres`
-	Database_Version      string `json:"databaseVersion"`
+	ServerOS              string `json:"serverOS"`
+	ServerArch            string `json:"serverArch"`
+	DatabaseType          string `json:"databaseType"` // `mysql` or `postgres`
+	DatabaseVersion       string `json:"databaseVersion"`
 	DatabaseSchemaVersion string `json:"databaseSchemaVersion"`
 	FileDriver            string `json:"fileDriver"`
 	ActiveUsers           int64  `json:"activeUsers"`
@@ -60,10 +60,10 @@ type CustomerPacketValues struct {
 }
 
 type CustomerPluginValues struct {
-	Plugin_ID string `json:"pluginID"`
-	Version   string `json:"version"`
-	Is_Active bool   `json:"isActive"`
-	Name      string `json:"name"`
+	PluginID string `json:"pluginID"`
+	Version  string `json:"version"`
+	IsActive bool   `json:"isActive"`
+	Name     string `json:"name"`
 }
 
 type CustomerService interface {

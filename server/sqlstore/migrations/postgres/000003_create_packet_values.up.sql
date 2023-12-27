@@ -1,5 +1,7 @@
 CREATE TABLE IF NOT EXISTS crm_packetValues (
 	updateDataId TEXT NOT NULL,
+	customerId TEXT NOT NULL,
+	current BOOLEAN NOT NULL,
 	licensedTo TEXT NOT NULL,
 	version TEXT NOT NULL,
 	serverOS TEXT NOT NULL,
