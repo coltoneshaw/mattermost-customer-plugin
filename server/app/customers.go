@@ -68,10 +68,30 @@ type CustomerPluginValues struct {
 
 type CustomerService interface {
 	// Get retrieves a customer based on id
-	Get(id string) (Customer, error)
+	GetCustomerByID(id string) (Customer, error)
+
+	// Checks to see if a customer exists based on the siteURL and licensedTo
+	// GetId(siteUrl string, licensedTo string) (id string, err error)
+
+	// This monitors the posts for a support packet and triggers actions based on that
+	MessageHasBeenPosted(post *model.Post)
+
+	GetPacket(customerId string) (CustomerPacketValues, error)
+	// StorePacket(updateId string, packet CustomerPacketValues) error
+
+	GetConfig(customerId string) (model.Config, error)
+	GetPlugins(customerId string) ([]CustomerPluginValues, error)
 }
 
 type CustomerStore interface {
 	// GetCustomers returns filtered customers and the total count before paging.
-	Get(id string) (Customer, error)
+	GetCustomerByID(id string) (Customer, error)
+
+	GetPacket(customerId string) (CustomerPacketValues, error)
+	// StorePacket(updateId string, packet CustomerPacketValues) error
+
+	GetConfig(customerId string) (model.Config, error)
+	GetPlugins(customerId string) ([]CustomerPluginValues, error)
+
+	// GetId(siteUrl string, licensedTo string) (id string, err error)
 }

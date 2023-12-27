@@ -42,7 +42,7 @@ func (h *CustomerHandler) getCustomer(c *Context, w http.ResponseWriter, r *http
 	vars := mux.Vars(r)
 	customerID := vars["id"]
 
-	customer, err := h.customerService.Get(customerID)
+	customer, err := h.customerService.GetCustomerByID(customerID)
 
 	if err != nil {
 		if errors.Is(err, app.ErrNotFound) {

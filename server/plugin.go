@@ -28,9 +28,8 @@ type Plugin struct {
 	botID string
 	bot   *bot.Bot
 
-	pluginAPI           *pluginapi.Client
-	customerService     app.CustomerService
-	packetActionService app.PacketActionService
+	pluginAPI       *pluginapi.Client
+	customerService app.CustomerService
 }
 
 type StatusRecorder struct {
@@ -90,12 +89,10 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrapf(err, "failed creating the SQL store")
 	}
 
-	packetActionStore := sqlstore.NewPacketActionStore(apiClient, sqlStore)
 	customerStore := sqlstore.NewCustomerStore(apiClient, sqlStore)
 	p.handler = api.NewHandler(pluginAPIClient, p.config)
 
-	p.packetActionService = app.NewPacketActionService(packetActionStore, pluginAPIClient, p.bot, p.config)
-	p.customerService = app.NewCustomerService(customerStore, p.bot, pluginAPIClient, p.packetActionService)
+	p.customerService = app.NewCustomerService(customerStore, p.bot, pluginAPIClient)
 
 	// if err = scheduler.Start(); err != nil {
 	// 	logrus.WithError(err).Error("JobOnceScheduler could not start")
@@ -124,7 +121,7 @@ func (p *Plugin) OnActivate() error {
 }
 
 func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
-	p.packetActionService.MessageHasBeenPosted(post)
+	p.customerService.MessageHasBeenPosted(post)
 }
 
 // // ExecuteCommand executes a command that has been previously registered via the RegisterCommand.

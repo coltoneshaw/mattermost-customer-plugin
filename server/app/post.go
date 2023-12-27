@@ -9,19 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/coltoneshaw/mattermost-plugin-customers/server/bot"
-	"github.com/coltoneshaw/mattermost-plugin-customers/server/config"
 	"github.com/mattermost/mattermost/server/public/model"
-	pluginapi "github.com/mattermost/mattermost/server/public/pluginapi"
 	"gopkg.in/yaml.v2"
 )
-
-type packetActionServiceImpl struct {
-	store         PacketActionStore
-	poster        bot.Poster
-	configService config.Service
-	api           *pluginapi.Client
-}
 
 const (
 	SupportPacketName = "support_packet.yaml"
@@ -29,31 +19,7 @@ const (
 	ConfigFileName    = "sanitized_config.json"
 )
 
-func NewPacketActionService(store PacketActionStore, api *pluginapi.Client, poster bot.Poster, configService config.Service) PacketActionService {
-	return &packetActionServiceImpl{
-		store:         store,
-		poster:        poster,
-		configService: configService,
-		api:           api,
-	}
-}
-
-func (p *packetActionServiceImpl) GetPacket(customerId string) (CustomerPacketValues, error) {
-	return p.store.GetPacket(customerId)
-}
-
-func (p *packetActionServiceImpl) StorePacket(updateId string, packet CustomerPacketValues) error {
-	return p.store.StorePacket(updateId, packet)
-}
-
-func (p *packetActionServiceImpl) GetConfig(customerId string) (model.Config, error) {
-	return p.store.GetConfig(customerId)
-}
-
-func (p *packetActionServiceImpl) GetPlugins(customerId string) ([]CustomerPluginValues, error) {
-	return p.store.GetPlugins(customerId)
-}
-func (p *packetActionServiceImpl) MessageHasBeenPosted(post *model.Post) {
+func (p *customerService) MessageHasBeenPosted(post *model.Post) {
 	if p.poster.IsFromPoster(post) || post.RootId != "" || len(post.FileIds) == 0 {
 		return
 	}
@@ -79,7 +45,7 @@ func (p *packetActionServiceImpl) MessageHasBeenPosted(post *model.Post) {
 	}
 }
 
-func postContainsSupportPackage(p *packetActionServiceImpl, post *model.Post) ([]*model.FileInfo, []string) {
+func postContainsSupportPackage(p *customerService, post *model.Post) ([]*model.FileInfo, []string) {
 	var supportPackets []*model.FileInfo
 	var names []string
 
@@ -214,7 +180,7 @@ func unmarshalPlugins(file *model.FileData) (*model.PluginsResponse, error) {
 }
 
 // Responsible for downloading, reading, and processing the support packet
-func processSupportPackets(p *packetActionServiceImpl, packetArray []*model.FileInfo, post *model.Post) error {
+func processSupportPackets(p *customerService, packetArray []*model.FileInfo, post *model.Post) error {
 
 	// looking through all the packets in a post as you can upload more than one.
 	for _, packet := range packetArray {

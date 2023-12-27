@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/coltoneshaw/mattermost-plugin-customers/server/bot"
+	"github.com/mattermost/mattermost/server/public/model"
 	pluginapi "github.com/mattermost/mattermost/server/public/pluginapi"
 )
 
@@ -9,40 +10,38 @@ type customerService struct {
 	store  CustomerStore
 	poster bot.Poster
 	api    *pluginapi.Client
-	packet PacketActionService
 }
 
 // NewCustomerService returns a new customer service
-func NewCustomerService(store CustomerStore, poster bot.Poster, api *pluginapi.Client, packetGetter PacketActionService) CustomerService {
+func NewCustomerService(store CustomerStore, poster bot.Poster, api *pluginapi.Client) CustomerService {
 	return &customerService{
 		store:  store,
 		poster: poster,
 		api:    api,
-		packet: packetGetter,
 	}
 }
 
-func (s *customerService) Get(id string) (Customer, error) {
+func (s *customerService) GetCustomerByID(id string) (Customer, error) {
 
-	customer, err := s.store.Get(id)
+	customer, err := s.store.GetCustomerByID(id)
 	if err != nil {
 		return Customer{}, err
 	}
 
-	config, err := s.packet.GetConfig(customer.ID)
+	config, err := s.GetConfig(customer.ID)
 	if err != nil {
 		return Customer{}, err
 	}
 
 	customer.Config = config
 
-	plugins, err := s.packet.GetPlugins(customer.ID)
+	plugins, err := s.GetPlugins(customer.ID)
 	if err != nil {
 		return Customer{}, err
 	}
 	customer.Plugins = plugins
 
-	packet, err := s.packet.GetPacket(id)
+	packet, err := s.GetPacket(id)
 	if err != nil {
 		return Customer{}, err
 	}
@@ -50,4 +49,24 @@ func (s *customerService) Get(id string) (Customer, error) {
 	customer.PacketValues = packet
 
 	return customer, nil
+}
+
+// func (s *customerService) GetId(siteUrl string, licensedTo string) (id string, err error) {
+
+// }
+
+func (p *customerService) GetPacket(customerId string) (CustomerPacketValues, error) {
+	return p.store.GetPacket(customerId)
+}
+
+// func (p *customerService) StorePacket(updateId string, packet CustomerPacketValues) error {
+// 	return p.store.StorePacket(updateId, packet)
+// }
+
+func (p *customerService) GetConfig(customerId string) (model.Config, error) {
+	return p.store.GetConfig(customerId)
+}
+
+func (p *customerService) GetPlugins(customerId string) ([]CustomerPluginValues, error) {
+	return p.store.GetPlugins(customerId)
 }
