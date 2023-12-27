@@ -17,20 +17,39 @@ import (
 )
 
 type packetActionServiceImpl struct {
+	store         PacketActionStore
 	poster        bot.Poster
 	configService config.Service
 	// store                 ChannelActionStore
 	api *pluginapi.Client
 }
 
-func NewPacketActionService(api *pluginapi.Client, poster bot.Poster, configService config.Service) PacketActionService {
+const (
+	SupportPacketName = "support_packet.yaml"
+	PluginFileName    = "plugins.json"
+	ConfigFileName    = "sanitized_config.json"
+)
+
+func NewPacketActionService(store PacketActionStore, api *pluginapi.Client, poster bot.Poster, configService config.Service) PacketActionService {
 	return &packetActionServiceImpl{
+		store:         store,
 		poster:        poster,
 		configService: configService,
 		api:           api,
 	}
 }
 
+func (p *packetActionServiceImpl) GetPacket(customerId string) (CustomerPacketValues, error) {
+	return p.store.GetPacket(customerId)
+}
+
+func (p *packetActionServiceImpl) GetConfig(customerId string) (model.Config, error) {
+	return p.store.GetConfig(customerId)
+}
+
+func (p *packetActionServiceImpl) GetPlugins(customerId string) ([]CustomerPluginValues, error) {
+	return p.store.GetPlugins(customerId)
+}
 func (p *packetActionServiceImpl) MessageHasBeenPosted(post *model.Post) {
 	if p.poster.IsFromPoster(post) || post.RootId != "" || len(post.FileIds) == 0 {
 		return
@@ -56,12 +75,6 @@ func (p *packetActionServiceImpl) MessageHasBeenPosted(post *model.Post) {
 		p.api.Log.Error("Failed processing packets" + err.Error())
 	}
 }
-
-const (
-	SupportPacketName = "support_packet.yaml"
-	PluginFileName    = "plugins.json"
-	ConfigFileName    = "sanitized_config.json"
-)
 
 func postContainsSupportPackage(p *packetActionServiceImpl, post *model.Post) ([]*model.FileInfo, []string) {
 	var supportPackets []*model.FileInfo

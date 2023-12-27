@@ -90,12 +90,12 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrapf(err, "failed creating the SQL store")
 	}
 
+	packetActionStore := sqlstore.NewPacketActionStore(apiClient, sqlStore)
 	customerStore := sqlstore.NewCustomerStore(apiClient, sqlStore)
 	p.handler = api.NewHandler(pluginAPIClient, p.config)
 
-	p.customerService = app.NewCustomerService(customerStore, p.bot, pluginAPIClient)
-
-	p.packetActionService = app.NewPacketActionService(pluginAPIClient, p.bot, p.config)
+	p.packetActionService = app.NewPacketActionService(packetActionStore, pluginAPIClient, p.bot, p.config)
+	p.customerService = app.NewCustomerService(customerStore, p.bot, pluginAPIClient, p.packetActionService)
 
 	// if err = scheduler.Start(); err != nil {
 	// 	logrus.WithError(err).Error("JobOnceScheduler could not start")
