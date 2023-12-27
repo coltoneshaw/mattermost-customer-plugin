@@ -28,8 +28,9 @@ type Plugin struct {
 	botID string
 	bot   *bot.Bot
 
-	pluginAPI       *pluginapi.Client
-	customerService app.CustomerService
+	pluginAPI           *pluginapi.Client
+	customerService     app.CustomerService
+	packetActionService app.PacketActionService
 }
 
 type StatusRecorder struct {
@@ -94,6 +95,8 @@ func (p *Plugin) OnActivate() error {
 
 	p.customerService = app.NewCustomerService(customerStore, p.bot, pluginAPIClient)
 
+	p.packetActionService = app.NewPacketActionService(pluginAPIClient, p.bot, p.config)
+
 	// if err = scheduler.Start(); err != nil {
 	// 	logrus.WithError(err).Error("JobOnceScheduler could not start")
 	// }
@@ -118,6 +121,10 @@ func (p *Plugin) OnActivate() error {
 	)
 
 	return nil
+}
+
+func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
+	p.packetActionService.MessageHasBeenPosted(post)
 }
 
 // // ExecuteCommand executes a command that has been previously registered via the RegisterCommand.

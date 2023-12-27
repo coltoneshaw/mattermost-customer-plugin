@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"archive/zip"
@@ -7,10 +7,55 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strings"
 
+	"github.com/coltoneshaw/mattermost-plugin-customers/server/bot"
+	"github.com/coltoneshaw/mattermost-plugin-customers/server/config"
 	"github.com/mattermost/mattermost/server/public/model"
-	"gopkg.in/yaml.v3"
+	pluginapi "github.com/mattermost/mattermost/server/public/pluginapi"
+	"gopkg.in/yaml.v2"
 )
+
+type packetActionServiceImpl struct {
+	poster        bot.Poster
+	configService config.Service
+	// store                 ChannelActionStore
+	api *pluginapi.Client
+}
+
+func NewPacketActionService(api *pluginapi.Client, poster bot.Poster, configService config.Service) PacketActionService {
+	return &packetActionServiceImpl{
+		poster:        poster,
+		configService: configService,
+		api:           api,
+	}
+}
+
+func (p *packetActionServiceImpl) MessageHasBeenPosted(post *model.Post) {
+	if p.poster.IsFromPoster(post) || post.RootId != "" || len(post.FileIds) == 0 {
+		return
+	}
+
+	supportPackets, names := postContainsSupportPackage(p, post)
+
+	if len(supportPackets) == 0 {
+		return
+	}
+
+	err := p.poster.PostMessageToThread(post.Id, &model.Post{
+		ChannelId: post.ChannelId,
+		Message:   "Uploading support packet for " + strings.Join(names, " ,"),
+	})
+
+	if err != nil {
+		p.api.Log.Error("Failed in sending reply" + err.Error())
+	}
+
+	err = processSupportPackets(p, supportPackets, post)
+	if err != nil {
+		p.api.Log.Error("Failed processing packets" + err.Error())
+	}
+}
 
 const (
 	SupportPacketName = "support_packet.yaml"
@@ -18,28 +63,32 @@ const (
 	ConfigFileName    = "sanitized_config.json"
 )
 
-func PostContainsSupportPackage(p *Plugin, post *model.Post) ([]*model.FileInfo, []string) {
+func postContainsSupportPackage(p *packetActionServiceImpl, post *model.Post) ([]*model.FileInfo, []string) {
 	var supportPackets []*model.FileInfo
 	var names []string
 
-	for _, file := range post.FileIds {
-		fileCheck, err := p.API.GetFileInfo(file)
+	for _, id := range post.FileIds {
+		fileCheck, err := p.api.File.GetInfo(id)
 		if err != nil {
-			p.API.LogError("Failure checking for support packet." + err.Error())
+			p.api.Log.Error("Failure checking for support packet." + err.Error())
 		}
 		supportPackets = append(supportPackets, fileCheck)
 		names = append(names, fileCheck.Name)
 	}
 
 	return supportPackets, names
-	// loop over each fileID
 }
 
-func unzipToMemory(zippedBytes []byte) ([]*model.FileData, error) {
+func unzipToMemory(zippedBytes io.Reader) ([]*model.FileData, error) {
 	var fileContents []*model.FileData
 
-	reader := bytes.NewReader(zippedBytes)
-	zipReader, err := zip.NewReader(reader, int64(len(zippedBytes)))
+	// Read all data from the io.Reader into a byte slice
+	data, err := io.ReadAll(zippedBytes)
+	if err != nil {
+		return nil, err
+	}
+	reader := bytes.NewReader(data)
+	zipReader, err := zip.NewReader(reader, int64(len(data)))
 
 	if err != nil {
 		return nil, err
@@ -149,25 +198,24 @@ func unmarshalPlugins(file *model.FileData) (*model.PluginsResponse, error) {
 }
 
 // Responsible for downloading, reading, and processing the support packet
-func ProcessSupportPackets(p *Plugin, packetArray []*model.FileInfo, post *model.Post) ([]*model.Post, error) {
-	var posts []*model.Post
+func processSupportPackets(p *packetActionServiceImpl, packetArray []*model.FileInfo, post *model.Post) error {
 
 	// looking through all the packets in a post as you can upload more than one.
 	for _, packet := range packetArray {
-		fileData, err := p.API.GetFile(packet.Id)
+		fileData, err := p.api.File.Get(packet.Id)
 
 		var packet *model.SupportPacket
 		var config *model.Config
 		var plugins *model.PluginsResponse
 
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		unzippedFiles, err2 := unzipToMemory(fileData)
-		if err2 != nil {
-			p.API.LogError("Failure unpacking packet" + err2.Error())
-			return nil, err2
+		unzippedFiles, err := unzipToMemory(fileData)
+		if err != nil {
+			p.api.Log.Error("Failure unpacking packet" + err.Error())
+			return err
 		}
 
 		// looking through everything that's in the zipped file to find
@@ -190,24 +238,21 @@ func ProcessSupportPackets(p *Plugin, packetArray []*model.FileInfo, post *model
 			}
 
 			if err != nil {
-				p.API.LogError("Error parsing support packet. Error:" + err.Error())
-				return nil, err
+				p.api.Log.Error("Error parsing support packet. Error:" + err.Error())
+				return err
 			}
 		}
 
-		newPost, err := p.API.CreatePost(&model.Post{
+		err = p.poster.PostMessageToThread(post.Id, &model.Post{
 			ChannelId: post.ChannelId,
-			RootId:    post.Id,
-			UserId:    p.botID,
 			Message:   returnMarkdownResponse(packet, config, plugins),
 		})
-		if err != nil {
-			p.API.LogError("Error parsing support packet. Error:" + err.Error())
-			return nil, err
-		}
 
-		posts = append(posts, newPost)
+		if err != nil {
+			p.api.Log.Error("Error parsing support packet. Error:" + err.Error())
+			return err
+		}
 	}
 
-	return posts, nil
+	return nil
 }
