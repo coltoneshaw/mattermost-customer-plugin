@@ -10,12 +10,16 @@ type PacketActionService interface {
 	MessageHasBeenPosted(post *model.Post)
 
 	GetPacket(customerId string) (CustomerPacketValues, error)
+	StorePacket(updateId string, packet CustomerPacketValues) error
+
 	GetConfig(customerId string) (model.Config, error)
 	GetPlugins(customerId string) ([]CustomerPluginValues, error)
 }
 
 type PacketActionStore interface {
 	GetPacket(customerId string) (CustomerPacketValues, error)
+	StorePacket(updateId string, packet CustomerPacketValues) error
+
 	GetConfig(customerId string) (model.Config, error)
 	GetPlugins(customerId string) ([]CustomerPluginValues, error)
 }

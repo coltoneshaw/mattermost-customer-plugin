@@ -79,17 +79,16 @@ func (s *packetActionStore) GetPacket(customerId string) (app.CustomerPacketValu
 		return app.CustomerPacketValues{}, errors.Wrapf(err, "failed to get packet data for customer id '%s'", customerId)
 	}
 
-	packet, _ := toPacket(rawPacket)
-
 	if err = tx.Commit(); err != nil {
 		return app.CustomerPacketValues{}, errors.Wrap(err, "could not commit transaction")
 	}
 
-	return packet, nil
+	return rawPacket.CustomerPacketValues, nil
 }
-func toPacket(rawPacket sqlPacket) (app.CustomerPacketValues, error) {
-	packet := rawPacket.CustomerPacketValues
-	return packet, nil
+
+func (s *packetActionStore) StorePacket(updateId string, packet app.CustomerPacketValues) error {
+
+	return nil
 }
 
 func (s *packetActionStore) GetConfig(customerId string) (model.Config, error) {

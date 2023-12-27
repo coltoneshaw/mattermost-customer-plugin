@@ -20,8 +20,7 @@ type packetActionServiceImpl struct {
 	store         PacketActionStore
 	poster        bot.Poster
 	configService config.Service
-	// store                 ChannelActionStore
-	api *pluginapi.Client
+	api           *pluginapi.Client
 }
 
 const (
@@ -41,6 +40,10 @@ func NewPacketActionService(store PacketActionStore, api *pluginapi.Client, post
 
 func (p *packetActionServiceImpl) GetPacket(customerId string) (CustomerPacketValues, error) {
 	return p.store.GetPacket(customerId)
+}
+
+func (p *packetActionServiceImpl) StorePacket(updateId string, packet CustomerPacketValues) error {
+	return p.store.StorePacket(updateId, packet)
 }
 
 func (p *packetActionServiceImpl) GetConfig(customerId string) (model.Config, error) {

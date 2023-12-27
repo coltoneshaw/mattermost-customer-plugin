@@ -66,19 +66,9 @@ func (s *customerStore) Get(id string) (app.Customer, error) {
 		return app.Customer{}, errors.Wrapf(err, "failed to get customer by id '%s'", id)
 	}
 
-	customer, err := toCustomers(rawCustomers)
-	if err != nil {
-		return app.Customer{}, err
-	}
-
 	if err = tx.Commit(); err != nil {
 		return app.Customer{}, errors.Wrap(err, "could not commit transaction")
 	}
 
-	return customer, nil
-}
-
-func toCustomers(rawCustomers sqlCustomers) (app.Customer, error) {
-	customers := rawCustomers.Customer
-	return customers, nil
+	return rawCustomers.Customer, nil
 }
