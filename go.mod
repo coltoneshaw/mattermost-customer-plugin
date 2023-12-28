@@ -10,10 +10,23 @@ require (
 )
 
 require (
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/golang/mock v1.6.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/minio/md5-simd v1.1.2 // indirect
+	github.com/minio/minio-go/v7 v7.0.66 // indirect
+	github.com/minio/sha256-simd v1.0.1 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/rs/xid v1.5.0 // indirect
+	github.com/stretchr/objx v0.5.1 // indirect
+	github.com/yuin/goldmark v1.6.0 // indirect
+	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -39,7 +52,7 @@ require (
 	github.com/mattermost/go-i18n v1.11.1-0.20211013152124-5c415071e404 // indirect
 	github.com/mattermost/ldap v0.0.0-20231116144001-0f480c025956 // indirect
 	github.com/mattermost/logr/v2 v2.0.21 // indirect
-	github.com/mattermost/mattermost/server/v8 v8.0.0-20231222122133-0496483a9ebb
+	github.com/mattermost/mattermost/server/v8 v8.0.0-20231222220027-2d1135ca4603
 	github.com/mattermost/squirrel v0.4.0
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
