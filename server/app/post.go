@@ -19,40 +19,40 @@ const (
 	ConfigFileName    = "sanitized_config.json"
 )
 
-func (p *customerService) MessageHasBeenPosted(post *model.Post) {
-	if p.poster.IsFromPoster(post) || post.RootId != "" || len(post.FileIds) == 0 {
+func (s *customerService) MessageHasBeenPosted(post *model.Post) {
+	if s.poster.IsFromPoster(post) || post.RootId != "" || len(post.FileIds) == 0 {
 		return
 	}
 
-	supportPackets, names := postContainsSupportPackage(p, post)
+	supportPackets, names := postContainsSupportPackage(s, post)
 
 	if len(supportPackets) == 0 {
 		return
 	}
 
-	err := p.poster.PostMessageToThread(post.Id, &model.Post{
+	err := s.poster.PostMessageToThread(post.Id, &model.Post{
 		ChannelId: post.ChannelId,
 		Message:   "Uploading support packet for " + strings.Join(names, " ,"),
 	})
 
 	if err != nil {
-		p.api.Log.Error("Failed in sending reply" + err.Error())
+		s.api.Log.Error("Failed in sending reply" + err.Error())
 	}
 
-	err = processSupportPackets(p, supportPackets, post)
+	err = processSupportPackets(s, supportPackets, post)
 	if err != nil {
-		p.api.Log.Error("Failed processing packets" + err.Error())
+		s.api.Log.Error("Failed processing packets" + err.Error())
 	}
 }
 
-func postContainsSupportPackage(p *customerService, post *model.Post) ([]*model.FileInfo, []string) {
+func postContainsSupportPackage(s *customerService, post *model.Post) ([]*model.FileInfo, []string) {
 	var supportPackets []*model.FileInfo
 	var names []string
 
 	for _, id := range post.FileIds {
-		fileCheck, err := p.api.File.GetInfo(id)
+		fileCheck, err := s.api.File.GetInfo(id)
 		if err != nil {
-			p.api.Log.Error("Failure checking for support packet." + err.Error())
+			s.api.Log.Error("Failure checking for support packet." + err.Error())
 		}
 		supportPackets = append(supportPackets, fileCheck)
 		names = append(names, fileCheck.Name)
@@ -101,7 +101,7 @@ func unzipToMemory(zippedBytes io.Reader) ([]*model.FileData, error) {
 }
 
 func returnMarkdownResponse(packet *model.SupportPacket, config *model.Config, plugins *model.PluginsResponse) string {
-	mdTable := "## Support Packet values\n"
+	mdTable := "## Support Packet valuessss\n"
 
 	mdTable += "| Key | Value |\n| --- | --- |\n"
 	mdTable += fmt.Sprintf("| %s | %v |\n", "Licensed To", packet.LicenseTo)
@@ -180,11 +180,10 @@ func unmarshalPlugins(file *model.FileData) (*model.PluginsResponse, error) {
 }
 
 // Responsible for downloading, reading, and processing the support packet
-func processSupportPackets(p *customerService, packetArray []*model.FileInfo, post *model.Post) error {
-
+func processSupportPackets(s *customerService, packetArray []*model.FileInfo, post *model.Post) error {
 	// looking through all the packets in a post as you can upload more than one.
 	for _, packet := range packetArray {
-		fileData, err := p.api.File.Get(packet.Id)
+		fileData, err := s.api.File.Get(packet.Id)
 
 		var packet *model.SupportPacket
 		var config *model.Config
@@ -196,14 +195,12 @@ func processSupportPackets(p *customerService, packetArray []*model.FileInfo, po
 
 		unzippedFiles, err := unzipToMemory(fileData)
 		if err != nil {
-			p.api.Log.Error("Failure unpacking packet" + err.Error())
+			s.api.Log.Error("Failure unpacking packet" + err.Error())
 			return err
 		}
 
 		// looking through everything that's in the zipped file to find
 		for _, file := range unzippedFiles {
-			var err error // Declare err outside the switch statement
-
 			switch file.Filename {
 			case SupportPacketName:
 				data, e := unmarshalPacket(file)
@@ -220,18 +217,25 @@ func processSupportPackets(p *customerService, packetArray []*model.FileInfo, po
 			}
 
 			if err != nil {
-				p.api.Log.Error("Error parsing support packet. Error:" + err.Error())
+				s.api.Log.Error("Error parsing support packet. Error:" + err.Error())
 				return err
 			}
 		}
 
-		err = p.poster.PostMessageToThread(post.Id, &model.Post{
+		// customerID, err := s.store.GetCustomerID(*config.ServiceSettings.SiteURL, packet.LicenseTo)
+
+		// if err != nil {
+		// 	s.api.Log.Error("Error getting customer ID. Error:" + err.Error())
+		// 	return err
+		// }
+
+		err = s.poster.PostMessageToThread(post.Id, &model.Post{
 			ChannelId: post.ChannelId,
 			Message:   returnMarkdownResponse(packet, config, plugins),
 		})
 
 		if err != nil {
-			p.api.Log.Error("Error parsing support packet. Error:" + err.Error())
+			s.api.Log.Error("Error parsing support packet. Error:" + err.Error())
 			return err
 		}
 	}

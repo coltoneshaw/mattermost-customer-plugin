@@ -20,7 +20,6 @@ const driverName = "postgres"
 // RunMigrations will run the migrations (if any). The caller should hold a cluster mutex if there
 // is a danger of this being run on multiple servers at once.
 func (sqlStore *SQLStore) RunMigrations() error {
-
 	if err := sqlStore.runMigrationsWithMorph(); err != nil {
 		return fmt.Errorf("failed to complete migrations (with morph): %w", err)
 	}

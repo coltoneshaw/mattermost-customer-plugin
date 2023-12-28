@@ -33,6 +33,13 @@ type sqlConfig struct {
 	Config json.RawMessage `db:"config"`
 }
 
+const (
+	customerTable = "crm_customers"
+	packetTable   = "crm_packetValues"
+	configTable   = "crm_configValues"
+	pluginTable   = "crm_pluginValues"
+)
+
 // NewCustomerStore creates a new store for customers ServiceImpl.
 func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.CustomerStore {
 	customerSelect := sqlStore.builder.
@@ -41,7 +48,7 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 			"ci.customerSuccessManager", "ci.accountExecutive",
 			"ci.technicalAccountManager", "ci.salesforceId", "ci.zendeskId",
 			"ci.siteUrl", "ci.licensedTo").
-		From("crm_customers as ci")
+		From(customerTable + " as ci")
 
 	packetValuesSelect := sqlStore.builder.
 		Select(
@@ -49,15 +56,15 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 			"cpv.databaseType", "cpv.databaseVersion", "cpv.databaseSchemaVersion",
 			"cpv.fileDriver", "cpv.activeUsers", "cpv.dailyActiveUsers", "cpv.monthlyActiveUsers",
 			"cpv.inactiveUserCount", "cpv.licenseSupportedUsers", "cpv.totalPosts", "cpv.totalChannels", "cpv.totalTeams").
-		From("crm_packetValues as cpv")
+		From(packetTable + " as cpv")
 
 	configValuesSelect := sqlStore.builder.
 		Select("ccv.config").
-		From("crm_configValues as ccv")
+		From(configTable + " as ccv")
 
 	pluginValuesSelect := sqlStore.builder.
 		Select("cpv.pluginId", "cpv.version", "cpv.isActive", "cpv.name").
-		From("crm_pluginValues as cpv")
+		From(pluginTable + " as cpv")
 
 	return &customerStore{
 		pluginAPI:          pluginAPI,
@@ -105,37 +112,100 @@ func (s *customerStore) GetCustomerByID(id string) (app.Customer, error) {
 	return rawCustomers.Customer, nil
 }
 
-// func (s *customerStore) GetId(siteUrl string, licensedTo string) (id string, err error) {
-// 	if siteUrl == "" || licensedTo == "" {
-// 		return "", errors.New("must include siteUrl or Licensedto")
-// 	}
+func (s *customerStore) GetCustomerID(siteURL string, licensedTo string) (id string, err error) {
+	if siteURL == "" || licensedTo == "" {
+		return "", errors.New("must include siteURL or Licensedto")
+	}
 
-// 	tx, err := s.store.db.Beginx()
-// 	if err != nil {
-// 		return "", errors.Wrap(err, "could not begin transaction")
-// 	}
-// 	defer s.store.finalizeTransaction(tx)
+	tx, err := s.store.db.Beginx()
+	if err != nil {
+		return "", errors.Wrap(err, "could not begin transaction")
+	}
+	defer s.store.finalizeTransaction(tx)
 
-// 	query := s.queryBuilder.
-// 		Select("id").
-// 		From("crm_customers").
-// 		Where(sq.Or{
-// 			sq.Eq{"siteUrl": siteUrl},
-// 			sq.Eq{"licensedTo": licensedTo},
-// 		})
+	query := s.queryBuilder.
+		Select("*").
+		From(customerTable).
+		Where(sq.Or{
+			sq.Eq{"siteUrl": siteURL},
+			sq.Eq{"licensedTo": licensedTo},
+		})
 
-// 	var rawIds []sqlCustomers
+	var rawCustomers []sqlCustomers
 
-// 	err = s.store.selectBuilder(tx, &rawCustomers, s.customerSelect.Where(sq.Eq{"ci.ID": id}))
-// 	if err == sql.ErrNoRows {
-// 		return app.Customer{}, errors.Wrapf(app.ErrNotFound, "customer does not exist for id '%s'", id)
-// 	} else if err != nil {
-// 		return app.Customer{}, errors.Wrapf(err, "failed to get customer by id '%s'", id)
-// 	}
-// }
+	err = s.store.selectBuilder(tx, &rawCustomers, query)
 
-func (s *customerStore) GetPacket(customerId string) (app.CustomerPacketValues, error) {
-	if customerId == "" {
+	if len(rawCustomers) == 0 {
+		newID := model.NewId()
+
+		_, err = s.store.execBuilder(s.store.db, sq.
+			Insert(customerTable).
+			// TODO - Should this use some kind of app.customer struct?
+			// the one that I have now pulls the other attributes that should not be stored here.
+			SetMap(map[string]interface{}{
+				"ID":                      newID,
+				"Name":                    licensedTo,
+				"CustomerSuccessManager":  "",
+				"AccountExecutive":        "",
+				"TechnicalAccountManager": "",
+				"SalesforceId":            "",
+				"ZendeskId":               "",
+				"LicensedTo":              "",
+				"SiteUrl":                 siteURL,
+				"Type":                    "",
+			}))
+		if err != nil {
+			return "", errors.Wrap(err, "failed to store new customer")
+		}
+
+		// this means no customer exists and we need to make a new customer.
+		return newID, nil
+	} else if err != nil {
+		return "", errors.Wrapf(err, "failed find customer with siteURL: '%s' and licensedTo: '%s'", siteURL, licensedTo)
+	}
+
+	if len(rawCustomers) == 1 {
+		return rawCustomers[0].ID, nil
+	}
+
+	var ID string
+	if len(rawCustomers) > 1 {
+		// check if there are more than one `licensed_to` returned.
+
+		// var matchingLicense []app.Customer
+		// var matchingSiteURL []app.Customer
+		var matchingBoth []app.Customer
+
+		for _, customer := range rawCustomers {
+			if customer.LicensedTo == licensedTo && customer.SiteURL == siteURL {
+				matchingBoth = append(matchingBoth, customer.Customer)
+			}
+
+			// if customer.LicensedTo == licensedTo {
+			// 	matchingLicense = append(matchingLicense, customer.Customer)
+			// }
+
+			// if customer.SiteURL == siteUrl {
+			// 	matchingSiteUrl = append(matchingSiteUrl, customer.Customer)
+			// }
+		}
+
+		if len(matchingBoth) > 1 {
+			return "", errors.Wrapf(err, "More than one customer returned with siteURL: '%s' and licensedTo: '%s'", siteURL, licensedTo)
+		}
+
+		ID = matchingBoth[0].ID
+	}
+
+	if err = tx.Commit(); err != nil {
+		return "", errors.Wrap(err, "could not commit transaction")
+	}
+
+	return ID, errors.Wrapf(err, "Failed to search for customer with siteURL: '%s' and licensedTo: '%s'", siteURL, licensedTo)
+}
+
+func (s *customerStore) GetPacket(customerID string) (app.CustomerPacketValues, error) {
+	if customerID == "" {
 		return app.CustomerPacketValues{}, errors.New("ID cannot be empty")
 	}
 
@@ -150,13 +220,14 @@ func (s *customerStore) GetPacket(customerId string) (app.CustomerPacketValues, 
 		tx,
 		&rawPacket,
 		s.packetValuesSelect.
-			Where(sq.Eq{"cpv.customerId": customerId}).
+			Where(sq.Eq{"cpv.customerId": customerID}).
 			Where(sq.Eq{"cpv.current": true}),
 	)
 
-	// TODO - this length could possibly be > 1. How to ensure it's always 1.
-	if err != nil {
-		return app.CustomerPacketValues{}, errors.Wrapf(err, "failed to get packet data for customer id '%s'", customerId)
+	if err == sql.ErrNoRows {
+		return app.CustomerPacketValues{}, nil
+	} else if err != nil {
+		return app.CustomerPacketValues{}, errors.Wrapf(err, "failed to get packet data for customer id '%s'", customerID)
 	}
 
 	if err = tx.Commit(); err != nil {
@@ -166,8 +237,8 @@ func (s *customerStore) GetPacket(customerId string) (app.CustomerPacketValues, 
 	return rawPacket.CustomerPacketValues, nil
 }
 
-func (s *customerStore) GetConfig(customerId string) (model.Config, error) {
-	if customerId == "" {
+func (s *customerStore) GetConfig(customerID string) (model.Config, error) {
+	if customerID == "" {
 		return model.Config{}, errors.New("ID cannot be empty")
 	}
 
@@ -181,13 +252,14 @@ func (s *customerStore) GetConfig(customerId string) (model.Config, error) {
 		tx,
 		&rawConfig,
 		s.configValuesSelect.
-			Where(sq.Eq{"ccv.customerId": customerId}).
+			Where(sq.Eq{"ccv.customerId": customerID}).
 			Where(sq.Eq{"ccv.current": true}),
 	)
 
-	// TODO - this length could possibly be > 1. How to ensure it's always 1.
-	if err != nil {
-		return model.Config{}, errors.Wrapf(err, "failed to get config data for customer id '%s'", customerId)
+	if err == sql.ErrNoRows {
+		return model.Config{}, nil
+	} else if err != nil {
+		return model.Config{}, errors.Wrapf(err, "failed to get config data for customer id '%s'", customerID)
 	}
 
 	var config model.Config
@@ -203,8 +275,8 @@ func (s *customerStore) GetConfig(customerId string) (model.Config, error) {
 	return config, nil
 }
 
-func (s *customerStore) GetPlugins(customerId string) ([]app.CustomerPluginValues, error) {
-	if customerId == "" {
+func (s *customerStore) GetPlugins(customerID string) ([]app.CustomerPluginValues, error) {
+	if customerID == "" {
 		return []app.CustomerPluginValues{}, errors.New("ID cannot be empty")
 	}
 
@@ -218,11 +290,14 @@ func (s *customerStore) GetPlugins(customerId string) ([]app.CustomerPluginValue
 		tx,
 		&rawPlugins,
 		s.pluginValuesSelect.
-			Where(sq.Eq{"cpv.customerId": customerId}).
+			Where(sq.Eq{"cpv.customerId": customerID}).
 			Where(sq.Eq{"cpv.current": true}),
 	)
-	if err != nil {
-		return []app.CustomerPluginValues{}, errors.Wrapf(err, "failed to get plugin data for customer id '%s'", customerId)
+
+	if err == sql.ErrNoRows {
+		return []app.CustomerPluginValues{}, nil
+	} else if err != nil {
+		return []app.CustomerPluginValues{}, errors.Wrapf(err, "failed to get plugin data for customer id '%s'", customerID)
 	}
 
 	if err = tx.Commit(); err != nil {

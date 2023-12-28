@@ -71,27 +71,30 @@ type CustomerService interface {
 	GetCustomerByID(id string) (Customer, error)
 
 	// Checks to see if a customer exists based on the siteURL and licensedTo
-	// GetId(siteUrl string, licensedTo string) (id string, err error)
+	GetCustomerID(siteURL string, licensedTo string) (id string, err error)
 
 	// This monitors the posts for a support packet and triggers actions based on that
 	MessageHasBeenPosted(post *model.Post)
 
-	GetPacket(customerId string) (CustomerPacketValues, error)
+	GetPacket(customerID string) (CustomerPacketValues, error)
 	// StorePacket(updateId string, packet CustomerPacketValues) error
 
-	GetConfig(customerId string) (model.Config, error)
-	GetPlugins(customerId string) ([]CustomerPluginValues, error)
+	GetConfig(customerID string) (model.Config, error)
+	GetPlugins(customerID string) ([]CustomerPluginValues, error)
 }
 
 type CustomerStore interface {
 	// GetCustomers returns filtered customers and the total count before paging.
 	GetCustomerByID(id string) (Customer, error)
 
-	GetPacket(customerId string) (CustomerPacketValues, error)
+	// Checks to see if a customer exists based on the siteURL and licensedTo
+	GetCustomerID(siteURL string, licensedTo string) (id string, err error)
+
+	GetPacket(customerID string) (CustomerPacketValues, error)
 	// StorePacket(updateId string, packet CustomerPacketValues) error
 
-	GetConfig(customerId string) (model.Config, error)
-	GetPlugins(customerId string) ([]CustomerPluginValues, error)
+	GetConfig(customerID string) (model.Config, error)
+	GetPlugins(customerID string) ([]CustomerPluginValues, error)
 
 	// GetId(siteUrl string, licensedTo string) (id string, err error)
 }

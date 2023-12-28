@@ -13,6 +13,10 @@ DEFAULT_GOARCH := $(shell go env GOARCH)
 
 export GO111MODULE=on
 
+# We need to export GOBIN to allow it to be set
+# for processes spawned from the Makefile
+export GOBIN ?= $(PWD)/bin
+
 # You can include assets this directory into the bundle. This can be e.g. used to include profile pictures.
 ASSETS_DIR ?= assets
 
@@ -22,7 +26,6 @@ default: all
 
 # Verify environment, and define PLUGIN_ID, PLUGIN_VERSION, HAS_SERVER and HAS_WEBAPP as needed.
 include build/setup.mk
-include build/legacy.mk
 
 BUNDLE_NAME ?= $(PLUGIN_ID)-$(PLUGIN_VERSION).tar.gz
 
@@ -41,9 +44,23 @@ endif
 .PHONY: all
 all: check-style test dist
 
+## Propagates plugin manifest information into the server/ and webapp/ folders.
+.PHONY: apply
+apply:
+	./build/bin/manifest apply
+
+## Install go tools
+install-go-tools:
+	@echo Installing go tools
+	$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
+	$(GO) install github.com/golang/mock/mockgen@v1.6.0
+	$(GO) install gotest.tools/gotestsum@v1.11.0
+	$(GO) install github.com/cortesi/modd/cmd/modd@latest
+
+
 ## Runs eslint and golangci-lint
 .PHONY: check-style
-check-style: webapp/node_modules
+check-style: apply webapp/node_modules install-go-tools
 	@echo Checking for style guide compliance
 
 ifneq ($(HAS_WEBAPP),)
@@ -52,7 +69,7 @@ ifneq ($(HAS_WEBAPP),)
 endif
 
 ifneq ($(HAS_SERVER),)
-	$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+	$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2
 
 	@echo Running golangci-lint
 	golangci-lint run ./...
@@ -131,7 +148,7 @@ deploy: dist
 
 ## Builds and installs the plugin to a server, updating the webapp automatically when changed.
 .PHONY: watch
-watch: server bundle
+watch: apply install-go-tools bundle server
 ifeq ($(MM_DEBUG),)
 	cd webapp && $(NPM) run build:watch
 else

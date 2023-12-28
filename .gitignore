@@ -5,3 +5,6 @@ dist/
 
 # Jetbrains
 .idea/
+
+./server/manifest.go
+./webapp/src/manifest.ts

@@ -22,7 +22,6 @@ func NewCustomerService(store CustomerStore, poster bot.Poster, api *pluginapi.C
 }
 
 func (s *customerService) GetCustomerByID(id string) (Customer, error) {
-
 	customer, err := s.store.GetCustomerByID(id)
 	if err != nil {
 		return Customer{}, err
@@ -51,22 +50,18 @@ func (s *customerService) GetCustomerByID(id string) (Customer, error) {
 	return customer, nil
 }
 
-// func (s *customerService) GetId(siteUrl string, licensedTo string) (id string, err error) {
-
-// }
-
-func (p *customerService) GetPacket(customerId string) (CustomerPacketValues, error) {
-	return p.store.GetPacket(customerId)
+func (s *customerService) GetCustomerID(siteURL string, licensedTo string) (id string, err error) {
+	return s.store.GetCustomerID(siteURL, licensedTo)
 }
 
-// func (p *customerService) StorePacket(updateId string, packet CustomerPacketValues) error {
-// 	return p.store.StorePacket(updateId, packet)
-// }
-
-func (p *customerService) GetConfig(customerId string) (model.Config, error) {
-	return p.store.GetConfig(customerId)
+func (s *customerService) GetPacket(customerID string) (CustomerPacketValues, error) {
+	return s.store.GetPacket(customerID)
 }
 
-func (p *customerService) GetPlugins(customerId string) ([]CustomerPluginValues, error) {
-	return p.store.GetPlugins(customerId)
+func (s *customerService) GetConfig(customerID string) (model.Config, error) {
+	return s.store.GetConfig(customerID)
+}
+
+func (s *customerService) GetPlugins(customerID string) ([]CustomerPluginValues, error) {
+	return s.store.GetPlugins(customerID)
 }
