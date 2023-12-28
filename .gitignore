@@ -1,4 +1,6 @@
 dist/
+bin/
+
 
 # Mac
 .DS_Store
@@ -6,5 +8,5 @@ dist/
 # Jetbrains
 .idea/
 
-./server/manifest.go
-./webapp/src/manifest.ts
+webapp/src/manifest.ts
+server/manifest.go
