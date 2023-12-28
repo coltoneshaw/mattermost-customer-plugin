@@ -105,7 +105,40 @@ func TestGetCustomerID(t *testing.T) {
 		if ID != "1" {
 			t.Fatal("customer id does not match")
 		}
-
 	})
 
+	t.Run("creates new due to too many exact matches", func(t *testing.T) {
+		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto) VALUES ($1, $2, $3, $4, $5)`, "2", "test", "test", "www.1.com", "1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ID, err := customerStore.GetCustomerID("www.1.com", "1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if ID == "1" || ID == "2" {
+			t.Fatal("customer id does not match")
+		}
+
+		if len(ID) != 26 {
+			t.Fatal("does not appear to be a valid id")
+		}
+	})
+
+	t.Run("siteurl was changed licensedto remains", func(t *testing.T) {
+		ID, err := customerStore.GetCustomerID("www.2.com", "1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if ID == "1" || ID == "2" {
+			t.Fatal("customer id does not match")
+		}
+
+		if len(ID) != 26 {
+			t.Fatal("does not appear to be a valid id")
+		}
+	})
 }

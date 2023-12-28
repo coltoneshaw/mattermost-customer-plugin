@@ -112,6 +112,31 @@ func (s *customerStore) GetCustomerByID(id string) (app.Customer, error) {
 	return rawCustomers.Customer, nil
 }
 
+func (s *customerStore) createCustomer(siteURL string, licensedTo string) (string, error) {
+	newID := model.NewId()
+
+	_, err := s.store.execBuilder(s.store.db, sq.
+		Insert(customerTable).
+		// TODO - Should this use some kind of app.customer struct?
+		// the one that I have now pulls the other attributes that should not be stored here.
+		SetMap(map[string]interface{}{
+			"ID":                      newID,
+			"Name":                    licensedTo,
+			"CustomerSuccessManager":  "",
+			"AccountExecutive":        "",
+			"TechnicalAccountManager": "",
+			"SalesforceId":            "",
+			"ZendeskId":               "",
+			"LicensedTo":              "",
+			"SiteUrl":                 siteURL,
+			"Type":                    "",
+		}))
+	if err != nil {
+		return "", errors.Wrap(err, "failed to store new customer")
+	}
+
+	return newID, nil
+}
 func (s *customerStore) GetCustomerID(siteURL string, licensedTo string) (id string, err error) {
 	if siteURL == "" || licensedTo == "" {
 		return "", errors.New("must include siteURL or Licensedto")
@@ -135,73 +160,43 @@ func (s *customerStore) GetCustomerID(siteURL string, licensedTo string) (id str
 
 	err = s.store.selectBuilder(tx, &rawCustomers, query)
 
-	if len(rawCustomers) == 0 {
-		newID := model.NewId()
-
-		_, err = s.store.execBuilder(s.store.db, sq.
-			Insert(customerTable).
-			// TODO - Should this use some kind of app.customer struct?
-			// the one that I have now pulls the other attributes that should not be stored here.
-			SetMap(map[string]interface{}{
-				"ID":                      newID,
-				"Name":                    licensedTo,
-				"CustomerSuccessManager":  "",
-				"AccountExecutive":        "",
-				"TechnicalAccountManager": "",
-				"SalesforceId":            "",
-				"ZendeskId":               "",
-				"LicensedTo":              "",
-				"SiteUrl":                 siteURL,
-				"Type":                    "",
-			}))
-		if err != nil {
-			return "", errors.Wrap(err, "failed to store new customer")
-		}
-
-		// this means no customer exists and we need to make a new customer.
-		return newID, nil
-	} else if err != nil {
+	if err != nil {
 		return "", errors.Wrapf(err, "failed find customer with siteURL: '%s' and licensedTo: '%s'", siteURL, licensedTo)
 	}
 
-	if len(rawCustomers) == 1 {
-		return rawCustomers[0].ID, nil
-	}
-
-	var ID string
-	if len(rawCustomers) > 1 {
-		// check if there are more than one `licensed_to` returned.
-
-		// var matchingLicense []app.Customer
-		// var matchingSiteURL []app.Customer
-		var matchingBoth []app.Customer
-
-		for _, customer := range rawCustomers {
-			if customer.LicensedTo == licensedTo && customer.SiteURL == siteURL {
-				matchingBoth = append(matchingBoth, customer.Customer)
-			}
-
-			// if customer.LicensedTo == licensedTo {
-			// 	matchingLicense = append(matchingLicense, customer.Customer)
-			// }
-
-			// if customer.SiteURL == siteUrl {
-			// 	matchingSiteUrl = append(matchingSiteUrl, customer.Customer)
-			// }
-		}
-
-		if len(matchingBoth) > 1 {
-			return "", errors.Wrapf(err, "More than one customer returned with siteURL: '%s' and licensedTo: '%s'", siteURL, licensedTo)
-		}
-
-		ID = matchingBoth[0].ID
+	if len(rawCustomers) == 0 {
+		return s.createCustomer(siteURL, licensedTo)
 	}
 
 	if err = tx.Commit(); err != nil {
 		return "", errors.Wrap(err, "could not commit transaction")
 	}
 
-	return ID, errors.Wrapf(err, "Failed to search for customer with siteURL: '%s' and licensedTo: '%s'", siteURL, licensedTo)
+	if len(rawCustomers) == 1 {
+		return rawCustomers[0].ID, nil
+	}
+
+	var matchingLicense []app.Customer
+	var matchingBoth []app.Customer
+
+	for _, customer := range rawCustomers {
+		if customer.LicensedTo == licensedTo && customer.SiteURL == siteURL {
+			matchingBoth = append(matchingBoth, customer.Customer)
+		}
+
+		if customer.LicensedTo == licensedTo {
+			matchingLicense = append(matchingLicense, customer.Customer)
+		}
+	}
+
+	if len(matchingBoth) > 1 || len(matchingLicense) > 1 {
+		// Need to evaluate this logic.
+		return s.createCustomer(siteURL, licensedTo)
+	} else if len(matchingBoth) == 1 || len(matchingLicense) == 1 {
+		return matchingBoth[0].ID, nil
+	}
+
+	return "", errors.Wrapf(err, "No customer found with siteURL: '%s' and licensedTo: '%s'", siteURL, licensedTo)
 }
 
 func (s *customerStore) GetPacket(customerID string) (app.CustomerPacketValues, error) {
