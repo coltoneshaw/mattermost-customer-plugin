@@ -3,6 +3,8 @@ package sqlstore
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"math"
 
 	"github.com/coltoneshaw/mattermost-plugin-customers/server/app"
 	"github.com/mattermost/mattermost/server/public/model"
@@ -22,7 +24,7 @@ type customerStore struct {
 }
 
 type sqlCustomers struct {
-	app.Customer
+	app.FullCustomerInfo
 }
 
 type sqlPacket struct {
@@ -40,6 +42,61 @@ const (
 	pluginTable   = "crm_pluginValues"
 )
 
+func applyCustomerFilterOptionsSort(builder sq.SelectBuilder, options app.CustomerFilterOptions) (sq.SelectBuilder, error) {
+	var sort string
+	switch options.Sort {
+	case app.SortByName:
+		sort = "name"
+	case app.SortByCSM:
+		sort = "customerSuccessManager"
+	case app.SortByAE:
+		sort = "accountExecutive"
+	case app.SortByTAM:
+		sort = "technicalAccountManager"
+	case app.SortByType:
+		sort = "type"
+	case app.SortBySiteURL:
+		sort = "siteURL"
+	case app.SortByLicensedTo:
+		sort = "licensedTo"
+	case "":
+		// Default to a stable sort if none explicitly provided.
+		sort = "ID"
+	default:
+		return sq.SelectBuilder{}, errors.Errorf("unsupported sort parameter '%s'", options.Sort)
+	}
+
+	var direction string
+	switch options.Direction {
+	case app.DirectionAsc:
+		direction = "ASC"
+	case app.DirectionDesc:
+		direction = "DESC"
+	case "":
+		// Default to an ascending sort if none explicitly provided.
+		direction = "ASC"
+	default:
+		return sq.SelectBuilder{}, errors.Errorf("unsupported direction parameter '%s'", options.Direction)
+	}
+
+	builder = builder.OrderByClause(fmt.Sprintf("%s %s", sort, direction))
+
+	page := options.Page
+	perPage := options.PerPage
+	if page < 0 {
+		page = 0
+	}
+	if perPage < 0 {
+		perPage = 0
+	}
+
+	builder = builder.
+		Offset(uint64(page * perPage)).
+		Limit(uint64(perPage))
+
+	return builder, nil
+}
+
 // NewCustomerStore creates a new store for customers ServiceImpl.
 func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.CustomerStore {
 	customerSelect := sqlStore.builder.
@@ -47,7 +104,7 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 			"ci.id", "ci.name", "ci.type",
 			"ci.customerSuccessManager", "ci.accountExecutive",
 			"ci.technicalAccountManager", "ci.salesforceId", "ci.zendeskId",
-			"ci.siteUrl", "ci.licensedTo").
+			"ci.siteUrl", "ci.licensedTo", "ci.gdriveLink", "ci.customerChannel").
 		From(customerTable + " as ci")
 
 	packetValuesSelect := sqlStore.builder.
@@ -77,39 +134,69 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 	}
 }
 
-// get customer data
-// get the latest from crm_packetValues with current = true
-// this should just be one
+func (s *customerStore) GetCustomers(opts app.CustomerFilterOptions) (app.GetCustomersResult, error) {
+	queryForResults, err := applyCustomerFilterOptionsSort(s.customerSelect, opts)
 
-// get the latest from config where current = true
-// this should just be one
+	if err != nil {
+		return app.GetCustomersResult{}, errors.Wrap(err, "failed to apply sort options")
+	}
 
-// get the latest from pluginValues where current = true
-// this can be an array of values
+	queryForTotal := s.store.builder.
+		Select("COUNT(*)").
+		From(customerTable)
 
-func (s *customerStore) GetCustomerByID(id string) (app.Customer, error) {
+	var customers []app.Customer
+	err = s.store.selectBuilder(s.store.db, &customers, queryForResults)
+
+	if err == sql.ErrNoRows {
+		return app.GetCustomersResult{}, errors.Wrap(app.ErrNotFound, "no customers found")
+	} else if err != nil {
+		return app.GetCustomersResult{}, errors.Wrap(err, "failed to get customers")
+	}
+
+	var total int
+
+	if err = s.store.getBuilder(s.store.db, &total, queryForTotal); err != nil {
+		return app.GetCustomersResult{}, errors.Wrap(err, "failed to get total customers")
+	}
+
+	pageCount := 0
+	if opts.PerPage > 0 {
+		pageCount = int(math.Ceil(float64(total) / float64(opts.PerPage)))
+	}
+	hasMore := opts.Page+1 < pageCount
+
+	return app.GetCustomersResult{
+		Customers:  customers,
+		TotalCount: total,
+		PageCount:  pageCount,
+		HasMore:    hasMore,
+	}, nil
+}
+
+func (s *customerStore) GetCustomerByID(id string) (app.FullCustomerInfo, error) {
 	if id == "" {
-		return app.Customer{}, errors.New("ID cannot be empty")
+		return app.FullCustomerInfo{}, errors.New("ID cannot be empty")
 	}
 
 	tx, err := s.store.db.Beginx()
 	if err != nil {
-		return app.Customer{}, errors.Wrap(err, "could not begin transaction")
+		return app.FullCustomerInfo{}, errors.Wrap(err, "could not begin transaction")
 	}
 	defer s.store.finalizeTransaction(tx)
 	var rawCustomers sqlCustomers
 	err = s.store.getBuilder(tx, &rawCustomers, s.customerSelect.Where(sq.Eq{"ci.ID": id}))
 	if err == sql.ErrNoRows {
-		return app.Customer{}, errors.Wrapf(app.ErrNotFound, "customer does not exist for id '%s'", id)
+		return app.FullCustomerInfo{}, errors.Wrapf(app.ErrNotFound, "customer does not exist for id '%s'", id)
 	} else if err != nil {
-		return app.Customer{}, errors.Wrapf(err, "failed to get customer by id '%s'", id)
+		return app.FullCustomerInfo{}, errors.Wrapf(err, "failed to get customer by id '%s'", id)
 	}
 
 	if err = tx.Commit(); err != nil {
-		return app.Customer{}, errors.Wrap(err, "could not commit transaction")
+		return app.FullCustomerInfo{}, errors.Wrap(err, "could not commit transaction")
 	}
 
-	return rawCustomers.Customer, nil
+	return rawCustomers.FullCustomerInfo, nil
 }
 
 func (s *customerStore) createCustomer(siteURL string, licensedTo string) (string, error) {
@@ -127,7 +214,7 @@ func (s *customerStore) createCustomer(siteURL string, licensedTo string) (strin
 			"TechnicalAccountManager": "",
 			"SalesforceId":            "",
 			"ZendeskId":               "",
-			"LicensedTo":              "",
+			"LicensedTo":              licensedTo,
 			"SiteUrl":                 siteURL,
 			"Type":                    "",
 		}))

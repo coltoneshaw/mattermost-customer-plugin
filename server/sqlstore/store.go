@@ -80,6 +80,7 @@ func (sqlStore *SQLStore) selectBuilder(q sqlx.Queryer, dest interface{}, b buil
 	}
 
 	sqlString = sqlStore.db.Rebind(sqlString)
+	logrus.Error(sqlString)
 
 	return sqlx.Select(q, dest, sqlString, args...)
 }

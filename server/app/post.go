@@ -222,12 +222,12 @@ func processSupportPackets(s *customerService, packetArray []*model.FileInfo, po
 			}
 		}
 
-		// customerID, err := s.store.GetCustomerID(*config.ServiceSettings.SiteURL, packet.LicenseTo)
+		_, err = s.store.GetCustomerID(*config.ServiceSettings.SiteURL, packet.LicenseTo)
 
-		// if err != nil {
-		// 	s.api.Log.Error("Error getting customer ID. Error:" + err.Error())
-		// 	return err
-		// }
+		if err != nil {
+			s.api.Log.Error("Error getting customer ID. Error:" + err.Error())
+			return err
+		}
 
 		err = s.poster.PostMessageToThread(post.Id, &model.Post{
 			ChannelId: post.ChannelId,

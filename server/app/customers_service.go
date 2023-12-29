@@ -21,28 +21,32 @@ func NewCustomerService(store CustomerStore, poster bot.Poster, api *pluginapi.C
 	}
 }
 
-func (s *customerService) GetCustomerByID(id string) (Customer, error) {
+func (s *customerService) GetCustomers(opts CustomerFilterOptions) (GetCustomersResult, error) {
+	return s.store.GetCustomers(opts)
+}
+
+func (s *customerService) GetCustomerByID(id string) (FullCustomerInfo, error) {
 	customer, err := s.store.GetCustomerByID(id)
 	if err != nil {
-		return Customer{}, err
+		return FullCustomerInfo{}, err
 	}
 
 	config, err := s.GetConfig(customer.ID)
 	if err != nil {
-		return Customer{}, err
+		return FullCustomerInfo{}, err
 	}
 
 	customer.Config = config
 
 	plugins, err := s.GetPlugins(customer.ID)
 	if err != nil {
-		return Customer{}, err
+		return FullCustomerInfo{}, err
 	}
 	customer.Plugins = plugins
 
 	packet, err := s.GetPacket(id)
 	if err != nil {
-		return Customer{}, err
+		return FullCustomerInfo{}, err
 	}
 
 	customer.PacketValues = packet

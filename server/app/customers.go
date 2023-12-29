@@ -2,42 +2,33 @@ package app
 
 import "github.com/mattermost/mattermost/server/public/model"
 
+type LicenseType string
+
+const (
+	Cloud        LicenseType = "cloud"
+	Enterprise   LicenseType = "enterprise"
+	Professional LicenseType = "professional"
+	Free         LicenseType = "free"
+	Trial        LicenseType = "trial"
+	NonProfit    LicenseType = "nonprofit"
+	Other        LicenseType = "other"
+)
+
 type Customer struct {
-	// ID is the unique identifier of the customer.
-	ID string `json:"id"`
-
-	// Name is the customers name and used as a somewhat unique identifier
-	Name string `json:"name"`
-
-	// The named CSM of the account.
-	CustomerSuccessManager string `json:"customerSuccessManager"`
-
-	// The named AE of the account.
-	AccountExecutive string `json:"accountExecutive"`
-
-	// The named TAM of the account.
-	TechnicalAccountManager string `json:"technicalAccountManager"`
-
-	// The Salesforce ID of the customer, manually added to the customer
-	SalesforceID string `json:"salesforceId"`
-
-	// The Zendesk Org ID of the customer, manually added to the customer
-	ZendeskID string `json:"zendeskId"`
-
+	ID                      string      `json:"id"`
+	Name                    string      `json:"name"`
+	CustomerSuccessManager  string      `json:"customerSuccessManager"`
+	AccountExecutive        string      `json:"accountExecutive"`
+	TechnicalAccountManager string      `json:"technicalAccountManager"`
+	SalesforceID            string      `json:"salesforceId"`
+	ZendeskID               string      `json:"zendeskId"`
+	Type                    LicenseType `json:"type"`
 	// This field may be removed eventually, but this is just a way to try and do a check on
 	// who this customer belongs to when a support packet comes in
-	LicensedTo string `json:"licensed_to"`
-	SiteURL    string `json:"siteURL"`
-
-	// LicenseType is the type of license a customer can have
-	// It can be "cloud", "enterprise", "professional", "free"
-	Type string `json:"type"`
-
-	PacketValues CustomerPacketValues `json:"packet"`
-
-	Plugins []CustomerPluginValues `json:"plugins"`
-
-	Config model.Config `json:"config"`
+	LicensedTo      string `json:"licensed_to"`
+	SiteURL         string `json:"siteURL"`
+	CustomerChannel string `json:"customerChannel"`
+	GDriveLink      string `json:"gdriveLink"`
 }
 
 type CustomerPacketValues struct {
@@ -66,9 +57,20 @@ type CustomerPluginValues struct {
 	Name     string `json:"name"`
 }
 
+type FullCustomerInfo struct {
+	Customer
+	PacketValues CustomerPacketValues   `json:"packet"`
+	Plugins      []CustomerPluginValues `json:"plugins"`
+	Config       model.Config           `json:"config"`
+}
+
 type CustomerService interface {
+
+	// GetCustomers returns filtered customers
+	GetCustomers(opts CustomerFilterOptions) (GetCustomersResult, error)
+
 	// Get retrieves a customer based on id
-	GetCustomerByID(id string) (Customer, error)
+	GetCustomerByID(id string) (FullCustomerInfo, error)
 
 	// Checks to see if a customer exists based on the siteURL and licensedTo
 	GetCustomerID(siteURL string, licensedTo string) (id string, err error)
@@ -84,8 +86,10 @@ type CustomerService interface {
 }
 
 type CustomerStore interface {
+	GetCustomers(opts CustomerFilterOptions) (GetCustomersResult, error)
+
 	// GetCustomers returns filtered customers and the total count before paging.
-	GetCustomerByID(id string) (Customer, error)
+	GetCustomerByID(id string) (FullCustomerInfo, error)
 
 	// Checks to see if a customer exists based on the siteURL and licensedTo
 	GetCustomerID(siteURL string, licensedTo string) (id string, err error)
@@ -95,6 +99,20 @@ type CustomerStore interface {
 
 	GetConfig(customerID string) (model.Config, error)
 	GetPlugins(customerID string) ([]CustomerPluginValues, error)
+}
 
-	// GetId(siteUrl string, licensedTo string) (id string, err error)
+type GetCustomersResult struct {
+	TotalCount int        `json:"total_count"`
+	PageCount  int        `json:"page_count"`
+	HasMore    bool       `json:"has_more"`
+	Customers  []Customer `json:"customers"`
+}
+
+type CustomerFilterOptions struct {
+	Sort      SortField
+	Direction SortDirection
+
+	// Pagination options.
+	Page    int
+	PerPage int
 }

@@ -43,7 +43,7 @@ func TestGetCustomerId(t *testing.T) {
 	})
 
 	t.Run("get customer id", func(t *testing.T) {
-		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type) VALUES ($1, $2, $3)`, "1", "test", "test")
+		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type) VALUES ($1, $2, $3)`, "1", "test", "cloud")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -92,7 +92,7 @@ func TestGetCustomerID(t *testing.T) {
 	})
 
 	t.Run("returns existing profile", func(t *testing.T) {
-		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto) VALUES ($1, $2, $3, $4, $5)`, "1", "test", "test", "www.1.com", "1")
+		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto) VALUES ($1, $2, $3, $4, $5)`, "1", "test", "cloud", "www.1.com", "1")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -108,7 +108,7 @@ func TestGetCustomerID(t *testing.T) {
 	})
 
 	t.Run("creates new due to too many exact matches", func(t *testing.T) {
-		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto) VALUES ($1, $2, $3, $4, $5)`, "2", "test", "test", "www.1.com", "1")
+		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto) VALUES ($1, $2, $3, $4, $5)`, "2", "test", "cloud", "www.1.com", "1")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -141,4 +141,38 @@ func TestGetCustomerID(t *testing.T) {
 			t.Fatal("does not appear to be a valid id")
 		}
 	})
+}
+
+func TestGetCustomers(t *testing.T) {
+	db := setupTestDB(t)
+	customerStore := setupCustomerStore(t, db)
+	t.Run("Returns empty array with no customers", func(t *testing.T) {
+		customers, err := customerStore.GetCustomers(app.CustomerFilterOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(customers.Customers) != 0 {
+			t.Fatal("Incorrect amount of customers", len(customers.Customers))
+		}
+
+	})
+
+	t.Run("correctly returns all customers", func(t *testing.T) {
+		customerStore.GetCustomerID("www.1.com", "1")
+		customerStore.GetCustomerID("www.2.com", "2")
+		customerStore.GetCustomerID("www.3.com", "3")
+
+		customers, err := customerStore.GetCustomers(app.CustomerFilterOptions{
+			PerPage: 10,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(customers.Customers) != 3 {
+			t.Fatal("Incorrect amount of customers", customers)
+		}
+	})
+
 }
