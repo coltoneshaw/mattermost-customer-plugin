@@ -1,4 +1,5 @@
 CREATE TABLE IF NOT EXISTS crm_pluginValues (
+	id TEXT NOT NULL PRIMARY KEY,
 	updateDataId TEXT NOT NULL,
 	customerId TEXT NOT NULL,
 	pluginId TEXT NOT NULL,

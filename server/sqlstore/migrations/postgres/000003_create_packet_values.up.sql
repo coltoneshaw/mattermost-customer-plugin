@@ -1,4 +1,5 @@
 CREATE TABLE IF NOT EXISTS crm_packetValues (
+	id TEXT NOT NULL PRIMARY KEY,
 	updateDataId TEXT NOT NULL,
 	customerId TEXT NOT NULL,
 	current BOOLEAN NOT NULL,
@@ -10,12 +11,12 @@ CREATE TABLE IF NOT EXISTS crm_packetValues (
 	databaseVersion TEXT NOT NULL,
 	databaseSchemaVersion TEXT NOT NULL,
 	fileDriver TEXT NOT NULL,
-	activeUsers TEXT NOT NULL,
-	dailyActiveUsers INT NOT NULL,
-	monthlyActiveUsers TEXT NOT NULL,
-	inactiveUserCount INT NOT NULL,
+	activeUsers INTEGER NOT NULL,
+	dailyActiveUsers INTEGER NOT NULL,
+	monthlyActiveUsers INTEGER NOT NULL,
+	inactiveUserCount INTEGER NOT NULL,
 	licenseSupportedUsers TEXT NOT NULL,
-	totalPosts INT NOT NULL,
-	totalChannels INT NOT NULL,
-	totalTeams INT NOT NULL
+	totalPosts BIGINT NOT NULL,
+	totalChannels BIGINT NOT NULL,
+	totalTeams INTEGER NOT NULL
 );

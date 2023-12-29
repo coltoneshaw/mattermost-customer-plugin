@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -36,12 +37,12 @@ func (s *customerService) MessageHasBeenPosted(post *model.Post) {
 	})
 
 	if err != nil {
-		s.api.Log.Error("Failed in sending reply" + err.Error())
+		logrus.WithError(err).Error("Failed in sending reply")
 	}
 
 	err = processSupportPackets(s, supportPackets, post)
 	if err != nil {
-		s.api.Log.Error("Failed processing packets" + err.Error())
+		logrus.WithError(err).Error("Failed processing packets")
 	}
 }
 
@@ -52,7 +53,7 @@ func postContainsSupportPackage(s *customerService, post *model.Post) ([]*model.
 	for _, id := range post.FileIds {
 		fileCheck, err := s.api.File.GetInfo(id)
 		if err != nil {
-			s.api.Log.Error("Failure checking for support packet." + err.Error())
+			logrus.WithError(err).Error("Failure checking for support packet.")
 		}
 		supportPackets = append(supportPackets, fileCheck)
 		names = append(names, fileCheck.Name)
@@ -195,7 +196,7 @@ func processSupportPackets(s *customerService, packetArray []*model.FileInfo, po
 
 		unzippedFiles, err := unzipToMemory(fileData)
 		if err != nil {
-			s.api.Log.Error("Failure unpacking packet" + err.Error())
+			logrus.WithError(err).Error("Failure unpacking packet")
 			return err
 		}
 
@@ -217,16 +218,22 @@ func processSupportPackets(s *customerService, packetArray []*model.FileInfo, po
 			}
 
 			if err != nil {
-				s.api.Log.Error("Error parsing support packet. Error:" + err.Error())
+				logrus.WithError(err).Error("Error parsing support packet.")
 				return err
 			}
 		}
 
-		_, err = s.store.GetCustomerID(*config.ServiceSettings.SiteURL, packet.LicenseTo)
+		customerID, err := s.store.GetCustomerID(*config.ServiceSettings.SiteURL, packet.LicenseTo)
 
 		if err != nil {
-			s.api.Log.Error("Error getting customer ID. Error:" + err.Error())
+			logrus.WithError(err).Error("Error getting customer ID.")
 			return err
+		}
+
+		err = s.store.UpdateCustomerData(customerID, packet, config, plugins)
+
+		if err != nil {
+			logrus.WithError(err).Error("Error updating customer data.")
 		}
 
 		err = s.poster.PostMessageToThread(post.Id, &model.Post{
@@ -235,7 +242,7 @@ func processSupportPackets(s *customerService, packetArray []*model.FileInfo, po
 		})
 
 		if err != nil {
-			s.api.Log.Error("Error parsing support packet. Error:" + err.Error())
+			logrus.WithError(err).Error("Error parsing support packet.")
 			return err
 		}
 	}

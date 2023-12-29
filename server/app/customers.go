@@ -99,6 +99,8 @@ type CustomerStore interface {
 
 	GetConfig(customerID string) (model.Config, error)
 	GetPlugins(customerID string) ([]CustomerPluginValues, error)
+
+	UpdateCustomerData(customerID string, packet *model.SupportPacket, config *model.Config, plugins *model.PluginsResponse) error
 }
 
 type GetCustomersResult struct {
