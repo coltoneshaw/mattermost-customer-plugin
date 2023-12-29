@@ -155,13 +155,24 @@ func TestGetCustomers(t *testing.T) {
 		if len(customers.Customers) != 0 {
 			t.Fatal("Incorrect amount of customers", len(customers.Customers))
 		}
-
 	})
 
 	t.Run("correctly returns all customers", func(t *testing.T) {
-		customerStore.GetCustomerID("www.1.com", "1")
-		customerStore.GetCustomerID("www.2.com", "2")
-		customerStore.GetCustomerID("www.3.com", "3")
+		testCases := []struct {
+			domain string
+			id     string
+		}{
+			{"www.1.com", "1"},
+			{"www.2.com", "2"},
+			{"www.3.com", "3"},
+		}
+
+		for _, tc := range testCases {
+			_, err := customerStore.GetCustomerID(tc.domain, tc.id)
+			if err != nil {
+				t.Fatalf("Failed to get customer ID for domain %s and id %s: %v", tc.domain, tc.id, err)
+			}
+		}
 
 		customers, err := customerStore.GetCustomers(app.CustomerFilterOptions{
 			PerPage: 10,
@@ -174,5 +185,4 @@ func TestGetCustomers(t *testing.T) {
 			t.Fatal("Incorrect amount of customers", customers)
 		}
 	})
-
 }

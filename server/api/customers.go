@@ -57,7 +57,6 @@ func (h *CustomerHandler) getCustomers(c *Context, w http.ResponseWriter, r *htt
 		return
 	}
 	ReturnJSON(w, customerResults, http.StatusOK)
-
 }
 
 func (h *CustomerHandler) getCustomer(c *Context, w http.ResponseWriter, r *http.Request) {

@@ -43,7 +43,7 @@ func (r *StatusRecorder) WriteHeader(status int) {
 }
 
 // ServeHTTP routes incoming HTTP requests to the plugin's REST API.
-func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
+func (p *Plugin) ServeHTTP(_ *plugin.Context, w http.ResponseWriter, r *http.Request) {
 	p.handler.ServeHTTP(w, r)
 }
 
@@ -82,7 +82,6 @@ func (p *Plugin) OnActivate() error {
 
 	apiClient := sqlstore.NewClient(pluginAPIClient)
 	p.bot = bot.New(pluginAPIClient, p.config.GetConfiguration().BotUserID, p.config)
-	// scheduler := cluster.GetJobOnceScheduler(p.API)
 
 	sqlStore, err := sqlstore.New(apiClient)
 	if err != nil {
@@ -93,10 +92,6 @@ func (p *Plugin) OnActivate() error {
 	p.handler = api.NewHandler(pluginAPIClient, p.config)
 
 	p.customerService = app.NewCustomerService(customerStore, p.bot, pluginAPIClient)
-
-	// if err = scheduler.Start(); err != nil {
-	// 	logrus.WithError(err).Error("JobOnceScheduler could not start")
-	// }
 
 	// Migrations use the scheduler, so they have to be run after playbookRunService and scheduler have started
 	mutex, err := cluster.NewMutex(p.API, "CRM_Customers")
@@ -120,7 +115,7 @@ func (p *Plugin) OnActivate() error {
 	return nil
 }
 
-func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
+func (p *Plugin) MessageHasBeenPosted(_ *plugin.Context, post *model.Post) {
 	p.customerService.MessageHasBeenPosted(post)
 }
 

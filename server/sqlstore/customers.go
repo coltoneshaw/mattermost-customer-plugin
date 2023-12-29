@@ -110,11 +110,11 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 
 	packetValuesSelect := sqlStore.builder.
 		Select(
-			"cpv.licensedTo", "cpv.version", "cpv.serverOS", "cpv.serverArch",
-			"cpv.databaseType", "cpv.databaseVersion", "cpv.databaseSchemaVersion",
-			"cpv.fileDriver", "cpv.activeUsers", "cpv.dailyActiveUsers", "cpv.monthlyActiveUsers",
-			"cpv.inactiveUserCount", "cpv.licenseSupportedUsers", "cpv.totalPosts", "cpv.totalChannels", "cpv.totalTeams").
-		From(packetTable + " as cpv")
+			"cp.licensedTo", "cp.version", "cp.serverOS", "cp.serverArch",
+			"cp.databaseType", "cp.databaseVersion", "cp.databaseSchemaVersion",
+			"cp.fileDriver", "cp.activeUsers", "cp.dailyActiveUsers", "cp.monthlyActiveUsers",
+			"cp.inactiveUserCount", "cp.licenseSupportedUsers", "cp.totalPosts", "cp.totalChannels", "cp.totalTeams").
+		From(packetTable + " as cp")
 
 	configValuesSelect := sqlStore.builder.
 		Select("ccv.config").
@@ -303,8 +303,8 @@ func (s *customerStore) GetPacket(customerID string) (app.CustomerPacketValues, 
 		tx,
 		&rawPacket,
 		s.packetValuesSelect.
-			Where(sq.Eq{"cpv.customerId": customerID}).
-			Where(sq.Eq{"cpv.current": true}),
+			Where(sq.Eq{"cp.customerId": customerID}).
+			Where(sq.Eq{"cp.current": true}),
 	)
 
 	if err == sql.ErrNoRows {
@@ -519,12 +519,12 @@ func (s *customerStore) storePlugins(updateID string, customerID string, plugins
 	return nil
 }
 
-func (s *customerStore) createAuditRow(customerID string) (ID string, err error) {
-	ID = model.NewId()
+func (s *customerStore) createAuditRow(customerID string) (id string, err error) {
+	id = model.NewId()
 	_, err = s.store.execBuilder(s.store.db, sq.
 		Insert("crm_audit").
 		SetMap(map[string]interface{}{
-			"ID":         ID,
+			"ID":         id,
 			"customerId": customerID,
 			"updatedBy":  "",
 			"updatedAt":  model.GetMillis(),
@@ -535,11 +535,10 @@ func (s *customerStore) createAuditRow(customerID string) (ID string, err error)
 		return "", errors.Wrap(err, "failed to store audit row")
 	}
 
-	return ID, nil
+	return id, nil
 }
 
 func (s *customerStore) UpdateCustomerData(customerID string, packet *model.SupportPacket, config *model.Config, plugins *model.PluginsResponse) error {
-
 	if customerID == "" {
 		return errors.New("customerID cannot be empty")
 	}
