@@ -1,8 +1,10 @@
 package sqlstore
 
 import (
+	"reflect"
 	"testing"
 
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/pkg/errors"
 
 	"github.com/coltoneshaw/mattermost-plugin-customers/server/app"
@@ -24,7 +26,7 @@ func setupCustomerStore(t *testing.T, db *sqlx.DB) app.CustomerStore {
 	return NewCustomerStore(pluginAPIClient, sqlStore)
 }
 
-func TestGetCustomerId(t *testing.T) {
+func TestGetCustomerByID(t *testing.T) {
 	db := setupTestDB(t)
 	customerStore := setupCustomerStore(t, db)
 
@@ -185,4 +187,124 @@ func TestGetCustomers(t *testing.T) {
 			t.Fatal("Incorrect amount of customers", customers)
 		}
 	})
+}
+
+func TestStoreCustomerData(t *testing.T) {
+	db := setupTestDB(t)
+	customerStore := setupCustomerStore(t, db)
+
+	t.Run("store customer data", func(t *testing.T) {
+		customer := app.Customer{
+			SiteURL:    "www.test.com",
+			LicensedTo: "test",
+			Name:       "test",
+		}
+
+		customerID, err := customerStore.GetCustomerID(customer.SiteURL, customer.LicensedTo)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		customer.ID = customerID
+
+		packet := &model.SupportPacket{
+			LicenseTo:     "test",
+			ServerVersion: "5.0.0",
+			TotalPosts:    100,
+		}
+		config := &model.Config{
+			ServiceSettings: model.ServiceSettings{
+				SiteURL: &customer.SiteURL,
+			},
+		}
+		plugins := &model.PluginsResponse{
+			Active: []*model.PluginInfo{
+				{
+					Manifest: model.Manifest{
+						Id:      "1",
+						Name:    "1name",
+						Version: "1.0.0",
+					},
+				},
+				{
+					Manifest: model.Manifest{
+						Id:      "2",
+						Name:    "2name",
+						Version: "1.0.0",
+					},
+				},
+			},
+			Inactive: []*model.PluginInfo{
+				{
+					Manifest: model.Manifest{
+						Id:      "3",
+						Name:    "3name",
+						Version: "1.0.0",
+					},
+				},
+				{
+					Manifest: model.Manifest{
+						Id:      "4",
+						Name:    "4name",
+						Version: "1.0.0",
+					},
+				},
+			},
+		}
+
+		pluginsResponse := []app.CustomerPluginValues{
+			{
+				PluginID: plugins.Active[0].Id,
+				Name:     plugins.Active[0].Name,
+				Version:  plugins.Active[0].Version,
+				IsActive: true,
+			},
+			{
+				PluginID: plugins.Active[1].Id,
+				Name:     plugins.Active[1].Name,
+				Version:  plugins.Active[1].Version,
+				IsActive: true,
+			},
+			{
+				PluginID: plugins.Inactive[0].Id,
+				Name:     plugins.Inactive[0].Name,
+				Version:  plugins.Inactive[0].Version,
+				IsActive: false,
+			},
+			{
+				PluginID: plugins.Inactive[1].Id,
+				Name:     plugins.Inactive[1].Name,
+				Version:  plugins.Inactive[1].Version,
+				IsActive: false,
+			},
+		}
+
+		packetResponse := app.CustomerPacketValues{
+			LicensedTo: packet.LicenseTo,
+			Version:    packet.ServerVersion,
+			TotalPosts: packet.TotalPosts,
+		}
+
+		err = customerStore.UpdateCustomerData(customerID, packet, config, plugins)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		customerInfo, err := customerStore.GetCustomerByID(customerID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assertEqual(t, *config.ServiceSettings.SiteURL, *customerInfo.Config.ServiceSettings.SiteURL, "config")
+		assertEqual(t, customer, customerInfo.Customer, "customer info")
+		assertEqual(t, packetResponse, customerInfo.PacketValues, "packet data")
+		assertEqual(t, pluginsResponse, customerInfo.Plugins, "plugin data")
+	})
+}
+
+func assertEqual(t *testing.T, expected, actual interface{}, name string) {
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("Incorrect %s. Expected %v got %v", name, expected, actual)
+	}
 }

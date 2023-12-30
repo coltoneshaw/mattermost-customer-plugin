@@ -40,14 +40,14 @@ type CustomerPacketValues struct {
 	DatabaseVersion       string `json:"databaseVersion"`
 	DatabaseSchemaVersion string `json:"databaseSchemaVersion"`
 	FileDriver            string `json:"fileDriver"`
-	ActiveUsers           int64  `json:"activeUsers"`
-	DailyActiveUsers      int64  `json:"dailyActiveUsers"`
-	MonthlyActiveUsers    int64  `json:"monthlyActiveUsers"`
-	InactiveUserCount     int64  `json:"inactiveUserCount"`
-	LicenseSupportedUsers int64  `json:"licenseSupportedUsers"`
-	TotalPosts            int64  `json:"totalPosts"`
-	TotalChannels         int64  `json:"totalChannels"`
-	TotalTeams            int64  `json:"totalTeams"`
+	ActiveUsers           int    `json:"activeUsers"`
+	DailyActiveUsers      int    `json:"dailyActiveUsers"`
+	MonthlyActiveUsers    int    `json:"monthlyActiveUsers"`
+	InactiveUserCount     int    `json:"inactiveUserCount"`
+	LicenseSupportedUsers int    `json:"licenseSupportedUsers"`
+	TotalPosts            int    `json:"totalPosts"`
+	TotalChannels         int    `json:"totalChannels"`
+	TotalTeams            int    `json:"totalTeams"`
 }
 
 type CustomerPluginValues struct {

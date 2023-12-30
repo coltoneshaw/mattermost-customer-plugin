@@ -176,6 +176,7 @@ func (s *customerStore) GetCustomers(opts app.CustomerFilterOptions) (app.GetCus
 }
 
 func (s *customerStore) GetCustomerByID(id string) (app.FullCustomerInfo, error) {
+	var customer app.FullCustomerInfo
 	if id == "" {
 		return app.FullCustomerInfo{}, errors.New("ID cannot be empty")
 	}
@@ -197,7 +198,29 @@ func (s *customerStore) GetCustomerByID(id string) (app.FullCustomerInfo, error)
 		return app.FullCustomerInfo{}, errors.Wrap(err, "could not commit transaction")
 	}
 
-	return rawCustomers.FullCustomerInfo, nil
+	customer.Customer = rawCustomers.Customer
+
+	config, err := s.GetConfig(customer.ID)
+	if err != nil {
+		return app.FullCustomerInfo{}, err
+	}
+
+	customer.Config = config
+
+	plugins, err := s.GetPlugins(customer.ID)
+	if err != nil {
+		return app.FullCustomerInfo{}, err
+	}
+	customer.Plugins = plugins
+
+	packet, err := s.GetPacket(id)
+	if err != nil {
+		return app.FullCustomerInfo{}, err
+	}
+
+	customer.PacketValues = packet
+
+	return customer, nil
 }
 
 func (s *customerStore) createCustomer(siteURL string, licensedTo string) (string, error) {

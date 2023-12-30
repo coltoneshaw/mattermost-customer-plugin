@@ -26,32 +26,7 @@ func (s *customerService) GetCustomers(opts CustomerFilterOptions) (GetCustomers
 }
 
 func (s *customerService) GetCustomerByID(id string) (FullCustomerInfo, error) {
-	customer, err := s.store.GetCustomerByID(id)
-	if err != nil {
-		return FullCustomerInfo{}, err
-	}
-
-	config, err := s.GetConfig(customer.ID)
-	if err != nil {
-		return FullCustomerInfo{}, err
-	}
-
-	customer.Config = config
-
-	plugins, err := s.GetPlugins(customer.ID)
-	if err != nil {
-		return FullCustomerInfo{}, err
-	}
-	customer.Plugins = plugins
-
-	packet, err := s.GetPacket(id)
-	if err != nil {
-		return FullCustomerInfo{}, err
-	}
-
-	customer.PacketValues = packet
-
-	return customer, nil
+	return s.store.GetCustomerByID(id)
 }
 
 func (s *customerService) GetCustomerID(siteURL string, licensedTo string) (id string, err error) {
