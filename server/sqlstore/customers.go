@@ -241,6 +241,9 @@ func (s *customerStore) createCustomer(siteURL string, licensedTo string) (strin
 			"LicensedTo":              licensedTo,
 			"SiteUrl":                 siteURL,
 			"Type":                    "",
+			"GdriveLink":              "",
+			"CustomerChannel":         "",
+			"LastUpdated":             model.GetMillis(),
 		}))
 	if err != nil {
 		return "", errors.Wrap(err, "failed to store new customer")
@@ -544,13 +547,14 @@ func (s *customerStore) storePlugins(updateID string, customerID string, plugins
 
 func (s *customerStore) createAuditRow(customerID string) (id string, err error) {
 	id = model.NewId()
+	lastUpdated := model.GetMillis()
 	_, err = s.store.execBuilder(s.store.db, sq.
-		Insert("crm_audit").
+		Insert(auditTable).
 		SetMap(map[string]interface{}{
 			"ID":         id,
 			"customerId": customerID,
 			"updatedBy":  "",
-			"updatedAt":  model.GetMillis(),
+			"updatedAt":  lastUpdated,
 			"updateType": "packet",
 			"path":       "",
 		}))
@@ -558,6 +562,15 @@ func (s *customerStore) createAuditRow(customerID string) (id string, err error)
 		return "", errors.Wrap(err, "failed to store audit row")
 	}
 
+	_, err = s.store.execBuilder(s.store.db, sq.
+		Update(customerTable).
+		SetMap(map[string]interface{}{
+			"lastUpdated": lastUpdated,
+		}),
+	)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to store audit row")
+	}
 	return id, nil
 }
 

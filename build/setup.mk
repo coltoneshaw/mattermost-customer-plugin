@@ -39,9 +39,9 @@ PWD ?= $(shell pwd)
 
 ifneq ($(HAS_WEBAPP),)
 ifeq ($(VOLTA),)
-    $(info volta is not available. You need to manually manage your npm version.)
-ifeq ($(NPM),)
-    $(error "npm is not available: see https://www.npmjs.com/get-npm")
+    $(info volta is not available. You need to manually manage your yarn version.)
+ifeq ($(yarn),)
+    $(error "yarn is not available: see https://classic.yarnpkg.com/en/docs/install")
 endif
 endif
 endif

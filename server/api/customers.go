@@ -93,16 +93,16 @@ func parseGetPlaybooksOptions(u *url.URL) (app.CustomerFilterOptions, error) {
 		sortField = app.SortByTAM
 	case "type":
 		sortField = app.SortByType
-	case "siteURL":
+	case "site_url":
 		sortField = app.SortBySiteURL
-	case "licensedTo":
+	case "licensed_to":
 		sortField = app.SortByLicensedTo
 	default:
 		return app.CustomerFilterOptions{}, errors.Errorf("bad parameter 'sort' (%s): it should be empty or one of 'name', 'customerSuccessManager', 'accountExecutive', 'technicalAccountManager', 'type', 'siteURL', 'licensedTo'", param)
 	}
 
 	var sortDirection app.SortDirection
-	param = strings.ToLower(params.Get("direction"))
+	param = strings.ToLower(params.Get("order"))
 	switch param {
 	case "asc", "":
 		sortDirection = app.DirectionAsc
@@ -124,7 +124,7 @@ func parseGetPlaybooksOptions(u *url.URL) (app.CustomerFilterOptions, error) {
 		return app.CustomerFilterOptions{}, errors.Errorf("bad parameter 'page': it should be a positive number")
 	}
 
-	perPageParam := params.Get("per_page")
+	perPageParam := params.Get("perPage")
 	if perPageParam == "" || perPageParam == "0" {
 		perPageParam = "1000"
 	}

@@ -25,10 +25,11 @@ type Customer struct {
 	Type                    LicenseType `json:"type"`
 	// This field may be removed eventually, but this is just a way to try and do a check on
 	// who this customer belongs to when a support packet comes in
-	LicensedTo      string `json:"licensed_to"`
+	LicensedTo      string `json:"licensedTo"`
 	SiteURL         string `json:"siteURL"`
 	CustomerChannel string `json:"customerChannel"`
-	GDriveLink      string `json:"gdriveLink"`
+	GDriveLink      string `json:"GDriveLink"`
+	LastUpdated     int64  `json:"lastUpdated"`
 }
 
 type CustomerPacketValues struct {
@@ -104,9 +105,9 @@ type CustomerStore interface {
 }
 
 type GetCustomersResult struct {
-	TotalCount int        `json:"total_count"`
-	PageCount  int        `json:"page_count"`
-	HasMore    bool       `json:"has_more"`
+	TotalCount int        `json:"totalCount"`
+	PageCount  int        `json:"pageCount"`
+	HasMore    bool       `json:"hasMore"`
 	Customers  []Customer `json:"customers"`
 }
 

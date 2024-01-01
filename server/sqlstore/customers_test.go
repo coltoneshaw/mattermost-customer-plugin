@@ -45,7 +45,7 @@ func TestGetCustomerByID(t *testing.T) {
 	})
 
 	t.Run("get customer id", func(t *testing.T) {
-		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type) VALUES ($1, $2, $3)`, "1", "test", "cloud")
+		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, lastUpdated) VALUES ($1, $2, $3, $4)`, "1", "test", "cloud", 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -94,7 +94,7 @@ func TestGetCustomerID(t *testing.T) {
 	})
 
 	t.Run("returns existing profile", func(t *testing.T) {
-		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto) VALUES ($1, $2, $3, $4, $5)`, "1", "test", "cloud", "www.1.com", "1")
+		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto, lastupdated) VALUES ($1, $2, $3, $4, $5, $6)`, "1", "test", "cloud", "www.1.com", "1", 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -110,7 +110,7 @@ func TestGetCustomerID(t *testing.T) {
 	})
 
 	t.Run("creates new due to too many exact matches", func(t *testing.T) {
-		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto) VALUES ($1, $2, $3, $4, $5)`, "2", "test", "cloud", "www.1.com", "1")
+		_, err := db.Exec(`INSERT INTO crm_customers (id, name, type, siteurl, licensedto, lastupdated) VALUES ($1, $2, $3, $4, $5, $6)`, "2", "test", "cloud", "www.1.com", "1", 0)
 		if err != nil {
 			t.Fatal(err)
 		}
