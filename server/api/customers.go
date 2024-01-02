@@ -80,8 +80,14 @@ func (h *CustomerHandler) getCustomer(c *Context, w http.ResponseWriter, r *http
 func parseGetPlaybooksOptions(u *url.URL) (app.CustomerFilterOptions, error) {
 	params := u.Query()
 
+	var searchTerm string
+	param := strings.ToLower(params.Get("searchTerm"))
+	if param != "" {
+		searchTerm = param
+	}
+
 	var sortField app.SortField
-	param := strings.ToLower(params.Get("sort"))
+	param = strings.ToLower(params.Get("sort"))
 	switch param {
 	case "name", "":
 		sortField = app.SortByName
@@ -137,9 +143,10 @@ func parseGetPlaybooksOptions(u *url.URL) (app.CustomerFilterOptions, error) {
 	}
 
 	return app.CustomerFilterOptions{
-		Sort:      sortField,
-		Direction: sortDirection,
-		Page:      page,
-		PerPage:   perPage,
+		Sort:       sortField,
+		Direction:  sortDirection,
+		SearchTerm: searchTerm,
+		Page:       page,
+		PerPage:    perPage,
 	}, nil
 }

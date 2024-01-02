@@ -112,8 +112,9 @@ type GetCustomersResult struct {
 }
 
 type CustomerFilterOptions struct {
-	Sort      SortField
-	Direction SortDirection
+	Sort       SortField
+	Direction  SortDirection
+	SearchTerm string
 
 	// Pagination options.
 	Page    int

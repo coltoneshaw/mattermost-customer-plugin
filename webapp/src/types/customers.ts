@@ -89,4 +89,5 @@ export type CustomerFilterOptions = {
     order: SortDirection;
     page: string;
     perPage: string;
+    searchTerm: string;
 }

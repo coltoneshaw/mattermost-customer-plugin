@@ -44,6 +44,16 @@ const (
 )
 
 func applyCustomerFilterOptionsSort(builder sq.SelectBuilder, options app.CustomerFilterOptions) (sq.SelectBuilder, error) {
+	var searchTerm string
+	if options.SearchTerm != "" {
+		searchTerm = "%" + options.SearchTerm + "%"
+		builder = builder.Where(sq.Or{
+			sq.ILike{"ci.name": searchTerm},
+			sq.ILike{"ci.licensedTo": searchTerm},
+			sq.ILike{"ci.siteURL": searchTerm},
+		})
+	}
+
 	var sort string
 	switch options.Sort {
 	case app.SortByName:
@@ -145,6 +155,14 @@ func (s *customerStore) GetCustomers(opts app.CustomerFilterOptions) (app.GetCus
 	queryForTotal := s.store.builder.
 		Select("COUNT(*)").
 		From(customerTable)
+
+	if opts.SearchTerm != "" {
+		queryForTotal = queryForTotal.Where(sq.Or{
+			sq.ILike{"name": "%" + opts.SearchTerm + "%"},
+			sq.ILike{"siteURL": "%" + opts.SearchTerm + "%"},
+			sq.ILike{"licensedTo": opts.SearchTerm},
+		})
+	}
 
 	var customers []app.Customer
 	err = s.store.selectBuilder(s.store.db, &customers, queryForResults)

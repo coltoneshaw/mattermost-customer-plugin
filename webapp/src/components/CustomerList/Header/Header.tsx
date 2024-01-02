@@ -1,10 +1,12 @@
-import {ActionIcon, Title} from '@mantine/core';
-import React, {Dispatch} from 'react';
+import {ActionIcon, TextInput} from '@mantine/core';
+import React from 'react';
 import styled from 'styled-components';
 
-import {SortAscendingIcon} from '@mattermost/compass-icons/components';
+import {SortAscendingIcon, MagnifyIcon} from '@mattermost/compass-icons/components';
 
 import {CustomerSortOptions, SortDirection} from '@/types/customers';
+
+import {SetStateDispatch} from '@/types/react';
 
 import {FilterButton} from './FilterButton';
 
@@ -15,23 +17,37 @@ const HeaderContainer = styled.div`
     padding: 7px 1em;
     border-bottom: 1px solid rgba(var(--center-channel-color-rgb), 0.08);
     width: 100%;
+    gap: 8px;
 `;
 
 type HeaderParams = {
     sortBy: CustomerSortOptions;
-    setSortBy: Dispatch<React.SetStateAction<CustomerSortOptions>>
+    setSortBy: SetStateDispatch<CustomerSortOptions>;
     orderBy: SortDirection;
-    setOrderBy: Dispatch<React.SetStateAction<SortDirection>>
+    setOrderBy: SetStateDispatch<SortDirection>;
+    searchTerm: string;
+    setSearchTerm:SetStateDispatch<string>;
 }
 const Header = ({
     setOrderBy,
     setSortBy,
     sortBy,
     orderBy,
+    searchTerm,
+    setSearchTerm,
 }: HeaderParams) => {
     return (
         <HeaderContainer>
-            <Title order={1}>{'Customers'}</Title>
+            <TextInput
+                size='lg'
+                sx={{
+                    width: '100%',
+                }}
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.currentTarget.value)}
+                placeholder='Search'
+                icon={<MagnifyIcon size='18px'/>}
+            />
             <div
                 style={{
                     display: 'flex',

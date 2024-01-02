@@ -22,12 +22,28 @@ const Container = styled.div`
     overflow-y: auto;
 `;
 
+const NoCustomersFound = () => {
+    return (
+        <div
+            style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                height: '100%',
+            }}
+        >
+            {'No customers found'}
+        </div>
+    );
+};
 const RighthandSidebar = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [sortBy, setSortBy] = useState<CustomerSortOptions>(CustomerSortOptions.Default);
     const [orderBy, setOrderBuy] = useState<SortDirection>(SortDirection.DirectionAsc);
     const [page] = useState<number>(0);
     const [perPage] = useState<number>(25);
+    const [searchTerm, setSearchTerm] = useState<string>('');
 
     useEffect(() => {
         clientFetchCustomers({
@@ -35,6 +51,7 @@ const RighthandSidebar = () => {
             order: orderBy,
             page: String(page),
             perPage: String(perPage),
+            searchTerm,
         }).
             then((res) => {
                 if (!res) {
@@ -42,7 +59,7 @@ const RighthandSidebar = () => {
                 }
                 setCustomers(res.customers);
             });
-    }, [orderBy, page, perPage, sortBy]);
+    }, [orderBy, page, perPage, sortBy, searchTerm]);
 
     return (
         <Container>
@@ -51,6 +68,8 @@ const RighthandSidebar = () => {
                 setOrderBy={setOrderBuy}
                 sortBy={sortBy}
                 setSortBy={setSortBy}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
             />
             <Stack
                 justify='flex-start'
@@ -64,7 +83,7 @@ const RighthandSidebar = () => {
                 }}
             >
                 {
-                    customers.length > 0 && customers.
+                    (customers && customers.length > 0) ? customers.
                         map((customer) => {
                             return (
                                 <CustomerCard
@@ -72,7 +91,7 @@ const RighthandSidebar = () => {
                                     customer={customer}
                                 />
                             );
-                        })
+                        }) : <NoCustomersFound/>
                 }
             </Stack>
 

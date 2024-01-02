@@ -68,7 +68,7 @@ func (sqlStore *SQLStore) getBuilder(q sqlx.Queryer, dest interface{}, b builder
 	}
 
 	sqlString = sqlStore.db.Rebind(sqlString)
-	logrus.Debug(sqlString)
+	logrus.Debug(sqlString, args)
 	return sqlx.Get(q, dest, sqlString, args...)
 }
 
@@ -83,7 +83,7 @@ func (sqlStore *SQLStore) selectBuilder(q sqlx.Queryer, dest interface{}, b buil
 	}
 
 	sqlString = sqlStore.db.Rebind(sqlString)
-	logrus.Debug(sqlString)
+	logrus.Debug(sqlString, args)
 	return sqlx.Select(q, dest, sqlString, args...)
 }
 
@@ -103,7 +103,7 @@ type queryExecer interface {
 // exec executes the given query using positional arguments, automatically rebinding for the db.
 func (sqlStore *SQLStore) exec(e execer, sqlString string, args ...interface{}) (sql.Result, error) {
 	sqlString = sqlStore.db.Rebind(sqlString)
-	logrus.Debug(sqlString)
+	logrus.Debug(sqlString, args)
 	return e.Exec(sqlString, args...)
 }
 
@@ -113,7 +113,7 @@ func (sqlStore *SQLStore) execBuilder(e execer, b builder) (sql.Result, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build sql")
 	}
-	logrus.Debug(sqlString)
+	logrus.Debug(sqlString, args)
 	return sqlStore.exec(e, sqlString, args...)
 }
 
