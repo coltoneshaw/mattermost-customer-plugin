@@ -103,6 +103,8 @@ func parseGetPlaybooksOptions(u *url.URL) (app.CustomerFilterOptions, error) {
 		sortField = app.SortBySiteURL
 	case "licensed_to":
 		sortField = app.SortByLicensedTo
+	case "last_updated":
+		sortField = app.SortByLicensedTo
 	default:
 		return app.CustomerFilterOptions{}, errors.Errorf("bad parameter 'sort' (%s): it should be empty or one of 'name', 'customerSuccessManager', 'accountExecutive', 'technicalAccountManager', 'type', 'siteURL', 'licensedTo'", param)
 	}

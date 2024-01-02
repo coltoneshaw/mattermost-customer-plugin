@@ -56,7 +56,7 @@ func applyCustomerFilterOptionsSort(builder sq.SelectBuilder, options app.Custom
 
 	var sort string
 	switch options.Sort {
-	case app.SortByName:
+	case app.SortByName, "":
 		sort = "name"
 	case app.SortByCSM:
 		sort = "customerSuccessManager"
@@ -70,9 +70,8 @@ func applyCustomerFilterOptionsSort(builder sq.SelectBuilder, options app.Custom
 		sort = "siteURL"
 	case app.SortByLicensedTo:
 		sort = "licensedTo"
-	case "":
-		// Default to a stable sort if none explicitly provided.
-		sort = "ID"
+	case app.SortByLastUpdated:
+		sort = "lastUpdated"
 	default:
 		return sq.SelectBuilder{}, errors.Errorf("unsupported sort parameter '%s'", options.Sort)
 	}
@@ -584,7 +583,8 @@ func (s *customerStore) createAuditRow(customerID string) (id string, err error)
 		Update(customerTable).
 		SetMap(map[string]interface{}{
 			"lastUpdated": lastUpdated,
-		}),
+		}).
+		Where(sq.Eq{"ID": customerID}),
 	)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to store audit row")

@@ -77,6 +77,7 @@ export enum CustomerSortOptions {
     SortByType = 'type',
     SortBySiteURL = 'site_url',
     SortByLicensedTo = 'licensed_to',
+    SortByLastUpdated = 'last_updated',
     Default = ''
 }
 

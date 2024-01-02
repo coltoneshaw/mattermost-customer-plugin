@@ -5,7 +5,7 @@ import {CustomerSortOptions, SortDirection} from '@/types/customers';
 
 import {SetStateDispatch} from '@/types/react';
 
-import {FilterButton} from './FilterButton';
+import {SortByButton} from './SortByButton';
 import {SortDirectionButton} from './SortDirection';
 import {SearchBar} from './Search';
 
@@ -51,12 +51,11 @@ const Header = ({
                     orderBy={orderBy}
                     setOrderBy={setOrderBy}
                 />
-                <FilterButton
+                <SortByButton
                     setSortBy={setSortBy}
                     sortBy={sortBy}
                 />
             </div>
-
         </HeaderContainer>
     );
 };

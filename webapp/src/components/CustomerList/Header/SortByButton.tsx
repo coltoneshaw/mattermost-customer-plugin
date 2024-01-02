@@ -30,7 +30,7 @@ const useStyles = createStyles(() => ({
     },
 }));
 
-type FilterParams = {
+type SortByParams = {
     sortBy: CustomerSortOptions;
     setSortBy: Dispatch<React.SetStateAction<CustomerSortOptions>>
 
@@ -65,12 +65,16 @@ const menuItems = [
         value: CustomerSortOptions.SortBySiteURL,
         label: 'Site URL',
     },
+    {
+        value: CustomerSortOptions.SortByLastUpdated,
+        label: 'Last Updated',
+    },
 ];
 
-const FilterButton = ({
+const SortByButton = ({
     sortBy,
     setSortBy,
-}: FilterParams) => {
+}: SortByParams) => {
     const {classes} = useStyles();
 
     return (
@@ -158,5 +162,5 @@ const FilterButton = ({
 };
 
 export {
-    FilterButton,
+    SortByButton,
 };
