@@ -3,6 +3,8 @@ import styled from 'styled-components';
 
 import {Text} from '@mantine/core';
 
+import {generatePath, useHistory} from 'react-router-dom';
+
 import {Customer} from '@/types/customers';
 
 import {UserList} from './UserList';
@@ -32,8 +34,18 @@ gap: 4px;
 const CustomerCard = ({
     customer,
 }: CustomerParams) => {
+    const history = useHistory();
+
+    const path = generatePath('/customers/:id', {
+        id: customer.id,
+    });
     return (
-        <CustomerCardContainer>
+
+        <CustomerCardContainer
+            onClick={() => {
+                history.push(path);
+            }}
+        >
             <Text
                 fw={600}
                 fz='md'
@@ -57,6 +69,7 @@ const CustomerCard = ({
                 type={customer.type}
             />
         </CustomerCardContainer>
+
     );
 };
 

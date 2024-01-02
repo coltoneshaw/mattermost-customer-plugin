@@ -7,10 +7,10 @@ import styled from 'styled-components';
 import {Customer, CustomerSortOptions, SortDirection} from '@/types/customers';
 import {clientFetchCustomers} from '@/client';
 
+import {CenteredText} from '../CenteredText';
+
 import {CustomerCard} from './CustomerCard/CustomerCard';
 import {Header} from './Header/Header';
-
-// const customerURL = getApiUrl() + '/customers/';
 
 const Container = styled.div`
     width: 100%;
@@ -22,22 +22,7 @@ const Container = styled.div`
     overflow-y: auto;
 `;
 
-const NoCustomersFound = () => {
-    return (
-        <div
-            style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '100%',
-                height: '100%',
-            }}
-        >
-            {'No customers found'}
-        </div>
-    );
-};
-const RighthandSidebar = () => {
+const CustomerList = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [sortBy, setSortBy] = useState<CustomerSortOptions>(CustomerSortOptions.Default);
     const [orderBy, setOrderBuy] = useState<SortDirection>(SortDirection.DirectionAsc);
@@ -68,7 +53,6 @@ const RighthandSidebar = () => {
                 setOrderBy={setOrderBuy}
                 sortBy={sortBy}
                 setSortBy={setSortBy}
-                searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
             />
             <Stack
@@ -91,7 +75,7 @@ const RighthandSidebar = () => {
                                     customer={customer}
                                 />
                             );
-                        }) : <NoCustomersFound/>
+                        }) : <CenteredText message={'No customers found'}/>
                 }
             </Stack>
 
@@ -99,4 +83,4 @@ const RighthandSidebar = () => {
     );
 };
 
-export {RighthandSidebar};
+export {CustomerList};

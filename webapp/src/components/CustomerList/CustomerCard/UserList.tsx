@@ -39,6 +39,7 @@ const Profile = ({
         name = preferredName;
         profileUri = Client4.getProfilePictureUrl(userId, user.last_picture_update);
     }
+
     return (
         <Tooltip
             withArrow={true}
@@ -47,6 +48,15 @@ const Profile = ({
             <Avatar
                 src={profileUri || ''}
                 radius='xl'
+                sx={{
+                    height: '32px',
+                    width: '32px',
+                    border: '2px dotted rgba(0, 0, 0, 0)',
+                    backgroundColor: 'var(--center-channel-bg)',
+                    '&:hover': {
+                        zIndex: 100,
+                    },
+                }}
             />
         </Tooltip>
 

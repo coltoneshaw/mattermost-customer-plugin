@@ -30,9 +30,14 @@ const SearchBar = ({
 
     return (
         <TextInput
+            bg={'transparent'}
             size='lg'
             sx={{
                 width: '100%',
+                input: {
+                    color: 'rgba(var(--global-header-text-rgb), 0.64)',
+                    background: 'transparent',
+                },
             }}
             value={searchTermState}
             onChange={(event) => setSearchTermState(event.currentTarget.value)}

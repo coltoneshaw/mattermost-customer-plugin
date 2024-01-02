@@ -1,7 +1,10 @@
 import React from 'react';
 import {MantineProvider, MantineThemeOverride} from '@mantine/core';
 
-import {RighthandSidebar} from './components/CustomerList/CustomerList';
+import {MemoryRouter, Route} from 'react-router-dom';
+
+import {CustomerList} from './components/CustomerList/CustomerList';
+import {CustomerInfo} from './components/CustomerInfo/CustomerInfo';
 
 const theme: MantineThemeOverride = {
     fontFamily: '"Open Sans", sans-serif;',
@@ -15,13 +18,32 @@ const theme: MantineThemeOverride = {
 };
 
 const CustyRHS = () => {
+    const paths = [
+        {pathname: '/customers'},
+    ];
     return (
-        <MantineProvider
-            withNormalizeCSS={true}
-            theme={theme}
+
+        <MemoryRouter
+            initialEntries={paths}
+            initialIndex={0}
         >
-            <RighthandSidebar/>
-        </MantineProvider>
+            <MantineProvider
+                withNormalizeCSS={true}
+                theme={theme}
+            >
+                <Route path='/customers/:id'>
+                    <CustomerInfo/>
+                </Route>
+                <Route
+                    exact={true}
+                    path='/customers'
+                >
+                    <CustomerList/>
+                </Route>
+
+            </MantineProvider>
+        </MemoryRouter>
+
     );
 };
 

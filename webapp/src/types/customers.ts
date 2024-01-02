@@ -53,6 +53,8 @@ export type CustomerPluginValues = {
     name: string
 }
 
+export type CustomerConfigValues = AdminConfig;
+
 export type FullCustomerInfo = Customer & {
     packet: CustomerPacketValues;
     config: AdminConfig;
