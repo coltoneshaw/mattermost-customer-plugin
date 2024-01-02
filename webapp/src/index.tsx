@@ -1,7 +1,7 @@
 /* eslint-disable no-undefined */
 import {Store, Action} from 'redux';
 
-import {GlobalState} from '@mattermost/types/lib/store';
+import {GlobalState} from '@mattermost/types/store';
 
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 
@@ -9,7 +9,7 @@ import {manifest} from '@/manifest';
 
 import {PluginRegistry} from '@/types/mattermost-webapp';
 
-import {RHS} from './components/righthand_sidebar/rhs';
+import {CustyRHS} from './app';
 
 const action = `${manifest.id}_received_rhs_action`;
 export function setShowRHSAction(showRHSPluginAction: () => void): unknown {
@@ -21,11 +21,11 @@ export function setShowRHSAction(showRHSPluginAction: () => void): unknown {
 
 export default class Plugin {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
-    public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
+    public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<string>>) {
         // @see https://developers.mattermost.com/extend/plugins/webapp/reference/
 
         // RHS Registration
-        const {toggleRHSPlugin} = registry.registerRightHandSidebarComponent(RHS, 'Custy');
+        const {toggleRHSPlugin} = registry.registerRightHandSidebarComponent(CustyRHS, 'Custy');
         const boundToggleRHSAction = () => store.dispatch(toggleRHSPlugin);
 
         // App Bar icon

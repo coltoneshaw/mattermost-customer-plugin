@@ -105,7 +105,7 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 			"ci.id", "ci.name", "ci.type",
 			"ci.customerSuccessManager", "ci.accountExecutive",
 			"ci.technicalAccountManager", "ci.salesforceId", "ci.zendeskId",
-			"ci.siteUrl", "ci.licensedTo", "ci.gdriveLink", "ci.customerChannel").
+			"ci.siteUrl", "ci.licensedTo", "ci.gdriveLink", "ci.customerChannel", "ci.lastUpdated").
 		From(customerTable + " as ci")
 
 	packetValuesSelect := sqlStore.builder.
