@@ -83,10 +83,12 @@ module.exports = (env) => {
             react: 'React',
             'react-dom': 'ReactDOM',
             redux: 'Redux',
+            luxon: 'Luxon',
             'react-redux': 'ReactRedux',
             'prop-types': 'PropTypes',
             'react-bootstrap': 'ReactBootstrap',
             'react-router-dom': 'ReactRouterDom',
+            'styled-components': 'StyledComponents',
         },
         output: {
             devtoolNamespace: PLUGIN_ID,

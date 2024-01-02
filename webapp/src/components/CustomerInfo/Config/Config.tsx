@@ -4,7 +4,6 @@ import {Code} from '@mantine/core';
 
 import {CustomerConfigValues} from '@/types/customers';
 import {CenteredText} from '@/components/CenteredText';
-import {PageHeader} from '../PageHeader';
 
 type Params = {
     config: CustomerConfigValues | null;
@@ -21,7 +20,6 @@ const CustomerInfoConfig = ({
     }
     return (
         <>
-            <PageHeader text='Config'/>
             <Code
                 block={true}
                 style={{

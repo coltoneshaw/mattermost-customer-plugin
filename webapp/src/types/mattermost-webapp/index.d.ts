@@ -37,7 +37,7 @@ export interface PluginRegistry {
     * - hideRHSPlugin: the action to dispatch that will close the RHS
     * - toggleRHSPlugin: the action to dispatch that will toggle the RHS
     */
-    registerRightHandSidebarComponent(component: PluginComponent['component'], title: string): {
+    registerRightHandSidebarComponent(component: PluginComponent['component'], title: React.JSX.Element): {
         id: string;
         showRHSPlugin: Action<Record<string, unknown>>;
         hideRHSPlugin: Action<Record<string, unknown>>;

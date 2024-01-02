@@ -74,6 +74,7 @@
     "@emotion/react": "^11.9.3",
     "@mantine/core": "6.0.21",
     "@mantine/hooks": "6.0.21",
+    "@mattermost/client": "9.2.0",
     "@mattermost/compass-icons": "0.1.40",
     "@types/luxon": "3.3.7",
     "core-js": "3.35.0",
@@ -89,6 +90,9 @@
   },
   "resolutions": {
     "react-dom": "17.0.2"
+  },
+  "peerDependencies": {
+    "styled-components": "5.3.6"
   },
   "jest": {
     "testPathIgnorePatterns": [

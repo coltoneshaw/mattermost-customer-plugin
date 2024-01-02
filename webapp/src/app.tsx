@@ -17,7 +17,7 @@ const theme: MantineThemeOverride = {
     },
 };
 
-const CustyRHS = () => {
+const CustomerRHS = () => {
     const paths = [
         {pathname: '/customers'},
     ];
@@ -48,5 +48,5 @@ const CustyRHS = () => {
 };
 
 export {
-    CustyRHS,
+    CustomerRHS,
 };

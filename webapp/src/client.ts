@@ -1,4 +1,4 @@
-import {Client4} from 'mattermost-redux/client';
+import {Client4, ClientError} from '@mattermost/client';
 import {Options, ClientResponse} from '@mattermost/types/client4';
 
 import {pluginId} from './manifest';
@@ -7,7 +7,7 @@ import {CustomerFilterOptions, FullCustomerInfo, GetCustomerResult} from './type
 let siteURL = '';
 let basePath = '';
 let apiUrl = `${basePath}/plugins/${pluginId}/api/v0`;
-
+const client = new Client4();
 export const setSiteUrl = (url?: string): void => {
     if (url) {
         basePath = new URL(url).pathname.replace(/\/+$/, '');
@@ -35,7 +35,7 @@ export const doGet = async <TData = unknown>(url: string) => {
 };
 
 export const doFetchWithResponse = async <TData = unknown>(url: string, options: Options = {}): Promise<Omit<ClientResponse<TData | undefined>, 'headers'>> => {
-    const response = await fetch(url, Client4.getOptions(options));
+    const response = await fetch(url, client.getOptions(options));
     let data;
     if (response.ok) {
         const contentType = response.headers.get('content-type');
@@ -49,9 +49,11 @@ export const doFetchWithResponse = async <TData = unknown>(url: string, options:
         };
     }
 
-    data = await response.text();
-    throw new Error(data, {
-        cause: 'status code:' + response.status + '. url:' + url,
+    const text = await response.text();
+    throw new ClientError(client.url, {
+        message: text || '',
+        status_code: response.status,
+        url,
     });
 };
 

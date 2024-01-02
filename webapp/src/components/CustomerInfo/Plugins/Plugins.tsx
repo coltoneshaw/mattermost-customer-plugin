@@ -4,7 +4,6 @@ import {Code} from '@mantine/core';
 
 import {CustomerPluginValues} from '@/types/customers';
 import {CenteredText} from '@/components/CenteredText';
-import {PageHeader} from '../PageHeader';
 
 type Params = {
     plugins: CustomerPluginValues[] | null;
@@ -21,7 +20,6 @@ const CustomerInfoPlugins = ({
     }
     return (
         <>
-            <PageHeader text='Plugins'/>
             <Code
                 block={true}
                 style={{

@@ -1,4 +1,4 @@
-/* eslint-disable no-undefined */
+import React from 'react';
 import {Store, Action} from 'redux';
 
 import {GlobalState} from '@mattermost/types/store';
@@ -9,7 +9,8 @@ import {manifest} from '@/manifest';
 
 import {PluginRegistry} from '@/types/mattermost-webapp';
 
-import {CustyRHS} from './app';
+import {CustomerRHS} from './app';
+import {RHSTitlePlaceholder} from './components/rhsTitle';
 
 const action = `${manifest.id}_received_rhs_action`;
 export function setShowRHSAction(showRHSPluginAction: () => void): unknown {
@@ -25,7 +26,7 @@ export default class Plugin {
         // @see https://developers.mattermost.com/extend/plugins/webapp/reference/
 
         // RHS Registration
-        const {toggleRHSPlugin} = registry.registerRightHandSidebarComponent(CustyRHS, 'Custy');
+        const {toggleRHSPlugin} = registry.registerRightHandSidebarComponent(CustomerRHS, <RHSTitlePlaceholder/>);
         const boundToggleRHSAction = () => store.dispatch(toggleRHSPlugin);
 
         // App Bar icon
@@ -36,7 +37,7 @@ export default class Plugin {
             const iconURL = `${siteUrl}/plugins/${manifest.id}/public/app-bar-icon.png`;
             registry.registerAppBarComponent({
                 iconUrl: iconURL,
-                tooltipText: 'Custy',
+                tooltipText: 'Customers',
                 action: boundToggleRHSAction,
                 supportedProductIds: '*',
             });

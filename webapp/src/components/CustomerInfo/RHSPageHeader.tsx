@@ -1,8 +1,7 @@
 import {Title} from '@mantine/core';
 import React from 'react';
 import styled from 'styled-components';
-import {ArrowBackIosIcon} from '@mattermost/compass-icons/components';
-import {useHistory} from 'react-router-dom';
+import {useLocation} from 'react-router-dom';
 
 import {MenuButton} from './MenuButton';
 
@@ -18,30 +17,33 @@ const HeaderContainer = styled.div`
 `;
 
 type Params = {
-    name: string;
     id: string;
 }
-export const Header = ({
-    name,
+const RhsPageHeader = ({
     id,
 }: Params) => {
-    const history = useHistory();
+    const location = useLocation();
+    const {pathname} = location;
+
+    let title = pathname.split('/').pop() || 'Customer Info';
+
+    switch (title) {
+    case 'packet':
+        title = 'Support Packet';
+        break;
+    case 'config':
+        title = 'Config';
+        break;
+    case 'plugins':
+        title = 'Plugins';
+        break;
+    default:
+        title = 'Customer Info';
+        break;
+    }
+
     return (
         <HeaderContainer>
-            <span
-                style={{
-                    color: 'var(--center-channel-color)',
-                    fontSize: '1em',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                }}
-                onClick={() => {
-                    history.push('/customers');
-                }}
-            >
-                <ArrowBackIosIcon size={16}/>
-            </span>
             <Title
                 sx={{
                     color: 'var(--center-channel-color)',
@@ -51,8 +53,12 @@ export const Header = ({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                 }}
-            >{name || 'Customer Info'}</Title>
+            >{title}</Title>
             <MenuButton id={id}/>
         </HeaderContainer>
     );
+};
+
+export {
+    RhsPageHeader,
 };

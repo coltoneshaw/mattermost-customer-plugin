@@ -1,6 +1,6 @@
 {
     "id": "com.mattermost.plugin-customers",
-    "name": "Custy",
+    "name": "Customers",
     "description": "This plugin enables parsing of support packets and customer lookup",
     "homepage_url": "https://github.com/coltoneshaw/mattermost-plugin-customers",
     "support_url": "https://github.com/coltoneshaw/mattermost-plugin-customers/issues",

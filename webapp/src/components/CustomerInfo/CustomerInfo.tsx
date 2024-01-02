@@ -8,11 +8,14 @@ import {clientFetchCustomerByID} from '@/client';
 
 import {CenteredText} from '../CenteredText';
 
-import {Header} from './Header';
+import {RHSTitle} from '../rhsTitle';
+
+import {RhsHeader} from './RHSHeader';
 import {CustomerInfoConfig} from './Config/Config';
 import {CustomerInfoPacket} from './Packet/Packet';
 import {CustomerInfoPlugins} from './Plugins/Plugins';
 import {CustomerInfoProfile} from './Info/Info';
+import {RhsPageHeader} from './RHSPageHeader';
 
 const Container = styled.div`
     width: 100%;
@@ -33,58 +36,74 @@ const CustomerInfo = () => {
     const {id} = useParams<RouteParams>();
 
     const [customer, setCustomer] = useState<FullCustomerInfo | null>(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        setLoading(true);
         clientFetchCustomerByID(id).
             then((res) => {
+                setLoading(false);
                 if (!res) {
                     return;
                 }
                 setCustomer(res);
             });
+        return () => {
+            setLoading(true);
+        };
     }, [id]);
 
-    if (!customer) {
-        return (
+    let AlternateContainer = <CenteredText message={'Failed to pull customer info.'}/>;
+    if (loading) {
+        AlternateContainer = (
             <CenteredText
-                message={'Failed to pull customer info.'}
+                message={'Loading...'}
             />
         );
+    }
+
+    if (!customer) {
+        return AlternateContainer;
     }
 
     const {config, plugins, packet, ...info} = customer;
 
     return (
-        <Container>
-            <Header
-                name={info.name}
-                id={info.id}
-            />
-
-            <Route path='/customers/:id/config'>
-                <CustomerInfoConfig
-                    config={config}
+        <>
+            <RHSTitle>
+                <RhsHeader
+                    name={info.name}
                 />
-            </Route>
-            <Route path='/customers/:id/packet'>
-                <CustomerInfoPacket
-                    packet={packet}
+            </RHSTitle>
+            <Container>
+                <RhsPageHeader
+                    id={info.id}
                 />
-            </Route>
-            <Route path='/customers/:id/plugins'>
-                <CustomerInfoPlugins
-                    plugins={plugins}
-                />
-            </Route>
-            <Route
-                path='/customers/:id'
-                exact={true}
-            >
-                <CustomerInfoProfile
-                    customer={info}
-                />
-            </Route>
-        </Container>
+                <Route path='/customers/:id/config'>
+                    <CustomerInfoConfig
+                        config={config}
+                    />
+                </Route>
+                <Route path='/customers/:id/packet'>
+                    <CustomerInfoPacket
+                        packet={packet}
+                    />
+                </Route>
+                <Route path='/customers/:id/plugins'>
+                    <CustomerInfoPlugins
+                        plugins={plugins}
+                    />
+                </Route>
+                <Route
+                    path='/customers/:id'
+                    exact={true}
+                >
+                    <CustomerInfoProfile
+                        customer={info}
+                    />
+                </Route>
+            </Container>
+        </>
     );
 };
 

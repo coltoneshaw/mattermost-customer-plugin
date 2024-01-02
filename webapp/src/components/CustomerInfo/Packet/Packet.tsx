@@ -4,7 +4,6 @@ import {Code} from '@mantine/core';
 
 import {CustomerPacketValues} from '@/types/customers';
 import {CenteredText} from '@/components/CenteredText';
-import {PageHeader} from '../PageHeader';
 
 type Params = {
     packet: CustomerPacketValues | null;
@@ -21,7 +20,6 @@ const CustomerInfoPacket = ({
     }
     return (
         <>
-            <PageHeader text='Packet'/>
             <Code
                 block={true}
                 style={{

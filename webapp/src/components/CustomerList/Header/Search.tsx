@@ -35,7 +35,7 @@ const SearchBar = ({
             sx={{
                 width: '100%',
                 input: {
-                    color: 'rgba(var(--global-header-text-rgb), 0.64)',
+                    color: 'rgba(var(--center-channel-color-rgs))',
                     background: 'transparent',
                 },
             }}
