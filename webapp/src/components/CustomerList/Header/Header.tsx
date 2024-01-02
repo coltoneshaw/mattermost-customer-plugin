@@ -1,14 +1,13 @@
-import {ActionIcon, TextInput} from '@mantine/core';
 import React from 'react';
 import styled from 'styled-components';
-
-import {SortAscendingIcon, MagnifyIcon} from '@mattermost/compass-icons/components';
 
 import {CustomerSortOptions, SortDirection} from '@/types/customers';
 
 import {SetStateDispatch} from '@/types/react';
 
 import {FilterButton} from './FilterButton';
+import {SortDirectionButton} from './SortDirection';
+import {SearchBar} from './Search';
 
 const HeaderContainer = styled.div`
     display: flex;
@@ -18,6 +17,7 @@ const HeaderContainer = styled.div`
     border-bottom: 1px solid rgba(var(--center-channel-color-rgb), 0.08);
     width: 100%;
     gap: 8px;
+    height: 50px;
 `;
 
 type HeaderParams = {
@@ -25,7 +25,6 @@ type HeaderParams = {
     setSortBy: SetStateDispatch<CustomerSortOptions>;
     orderBy: SortDirection;
     setOrderBy: SetStateDispatch<SortDirection>;
-    searchTerm: string;
     setSearchTerm:SetStateDispatch<string>;
 }
 const Header = ({
@@ -33,20 +32,12 @@ const Header = ({
     setSortBy,
     sortBy,
     orderBy,
-    searchTerm,
     setSearchTerm,
 }: HeaderParams) => {
     return (
         <HeaderContainer>
-            <TextInput
-                size='lg'
-                sx={{
-                    width: '100%',
-                }}
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.currentTarget.value)}
-                placeholder='Search'
-                icon={<MagnifyIcon size='18px'/>}
+            <SearchBar
+                setSearchTerm={setSearchTerm}
             />
             <div
                 style={{
@@ -56,30 +47,10 @@ const Header = ({
                     gap: '.5em',
                 }}
             >
-
-                <ActionIcon
-                    sx={{
-                        height: '32px',
-                        width: '32px',
-                        color: 'rgba(var(--center-channel-color-rgb), 0.72)',
-                        transform: orderBy === SortDirection.DirectionDesc ? 'rotate(180deg)' : '',
-                        '&:hover': {
-                            backgroundColor: 'rgba(var(--center-channel-color-rgb), 0.08)',
-                            color: 'rgba(var(--center-channel-color-rgb), 0.72)',
-                        },
-                    }}
-                    onClick={() => {
-                        if (orderBy === SortDirection.DirectionAsc) {
-                            setOrderBy(SortDirection.DirectionDesc);
-                        } else {
-                            setOrderBy(SortDirection.DirectionAsc);
-                        }
-                    }}
-                >
-                    <SortAscendingIcon
-                        size={18}
-                    />
-                </ActionIcon>
+                <SortDirectionButton
+                    orderBy={orderBy}
+                    setOrderBy={setOrderBy}
+                />
                 <FilterButton
                     setSortBy={setSortBy}
                     sortBy={sortBy}
