@@ -2,6 +2,7 @@ package sqlstore
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mattermost/mattermost/server/public/model"
@@ -25,17 +26,25 @@ func New(pluginAPI PluginAPIClient) (*SQLStore, error) {
 	}
 	db = sqlx.NewDb(origDB, pluginAPI.Store.DriverName())
 
-	builder := sq.StatementBuilder.PlaceholderFormat(sq.Question)
-	if pluginAPI.Store.DriverName() == model.DatabaseDriverPostgres {
-		builder = builder.PlaceholderFormat(sq.Dollar)
+	idleTimeMilliseconds := pluginAPI.Configuration.GetConfig().SqlSettings.ConnMaxIdleTimeMilliseconds
+	if idleTimeMilliseconds != nil {
+		db.SetConnMaxIdleTime(time.Duration(*idleTimeMilliseconds) * time.Millisecond)
 	}
 
-	if pluginAPI.Store.DriverName() == model.DatabaseDriverMysql {
-		db.MapperFunc(func(s string) string {
-			logrus.Debug(s)
-			return s
-		})
+	lifetimeMilliseconds := pluginAPI.Configuration.GetConfig().SqlSettings.ConnMaxLifetimeMilliseconds
+	if lifetimeMilliseconds != nil {
+		db.SetConnMaxLifetime(time.Duration(*idleTimeMilliseconds) * time.Millisecond)
 	}
+
+	builder := sq.StatementBuilder.PlaceholderFormat(sq.Question)
+	if pluginAPI.Store.DriverName() == model.DatabaseDriverPostgres {
+	}
+
+	if pluginAPI.Store.DriverName() != model.DatabaseDriverPostgres {
+		return nil, errors.Errorf("unsupported database driver %s", pluginAPI.Store.DriverName())
+	}
+
+	builder = builder.PlaceholderFormat(sq.Dollar)
 
 	return &SQLStore{
 		db,

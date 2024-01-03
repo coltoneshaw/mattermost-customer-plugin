@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/isacikgoz/morph"
-	"github.com/isacikgoz/morph/drivers"
-	ps "github.com/isacikgoz/morph/drivers/postgres"
-	"github.com/isacikgoz/morph/sources/embedded"
+	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/mattermost/morph"
+	"github.com/mattermost/morph/drivers"
+	ps "github.com/mattermost/morph/drivers/postgres"
+	"github.com/mattermost/morph/sources"
+	"github.com/mattermost/morph/sources/embedded"
+	"github.com/sirupsen/logrus"
 )
 
 //go:embed migrations
@@ -27,10 +30,11 @@ func (sqlStore *SQLStore) RunMigrations() error {
 	return nil
 }
 
-func (sqlStore *SQLStore) runMigrationsWithMorph() error {
+func (sqlStore *SQLStore) createSource() (sources.Source, error) {
+	driverName := sqlStore.db.DriverName()
 	assetsList, err := assets.ReadDir(filepath.Join("migrations", driverName))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	assetNamesForDriver := make([]string, len(assetsList))
@@ -44,37 +48,56 @@ func (sqlStore *SQLStore) runMigrationsWithMorph() error {
 			return assets.ReadFile(filepath.Join("migrations", driverName, name))
 		},
 	})
+
+	return src, err
+}
+
+func (sqlStore *SQLStore) createDriver() (drivers.Driver, error) {
+	driverName := sqlStore.db.DriverName()
+	if driverName != model.DatabaseDriverPostgres {
+		return nil, fmt.Errorf("unsupported database type %s for migration", driverName)
+	}
+	return ps.WithInstance(sqlStore.db.DB)
+}
+
+func (sqlStore *SQLStore) createMorphEngine() (*morph.Morph, error) {
+	src, err := sqlStore.createSource()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	config := drivers.Config{
-		StatementTimeoutInSecs: 100000,
-		MigrationsTable:        "CRM_db_migrations",
-	}
-
-	var driver drivers.Driver
-
-	driver, err = ps.WithInstance(sqlStore.db.DB, &ps.Config{
-		Config: config,
-	})
-
+	driver, err := sqlStore.createDriver()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	opts := []morph.EngineOption{
 		morph.WithLock("mm-customers-lock-key"),
+		morph.SetMigrationTableName("CRM_db_migrations"),
+		morph.SetStatementTimeoutInSeconds(30),
 	}
 	engine, err := morph.New(context.Background(), driver, src, opts...)
+
+	return engine, err
+}
+
+// WARNING: We don't use morph migration until proper testing
+func (sqlStore *SQLStore) runMigrationsWithMorph() error {
+	engine, err := sqlStore.createMorphEngine()
 	if err != nil {
 		return err
 	}
-	defer engine.Close()
-
+	defer func() {
+		logrus.Debug("Closing morph engine")
+		err = engine.Close()
+		if err != nil {
+			logrus.Errorf("Error closing morph engine. err: '%v'", err)
+			return
+		}
+		logrus.Debug("Closed morph engine")
+	}()
 	if err := engine.ApplyAll(); err != nil {
 		return fmt.Errorf("could not apply migrations: %w", err)
 	}
-
 	return nil
 }

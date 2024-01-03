@@ -297,6 +297,11 @@ func TestStoreCustomerData(t *testing.T) {
 		}
 
 		assertEqual(t, *config.ServiceSettings.SiteURL, *customerInfo.Config.ServiceSettings.SiteURL, "config")
+
+		if customerInfo.LastUpdated == 0 {
+			t.Fatal("last updated not set in customer data")
+		}
+		customerInfo.LastUpdated = 0
 		assertEqual(t, customer, customerInfo.Customer, "customer info")
 		assertEqual(t, packetResponse, customerInfo.PacketValues, "packet data")
 		assertEqual(t, pluginsResponse, customerInfo.Plugins, "plugin data")
