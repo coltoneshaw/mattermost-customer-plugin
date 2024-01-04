@@ -59,9 +59,11 @@ const FormTextInput = ({
 
 type Params = {
     customer: Customer | null;
+    updateCustomer: (values: Customer) => void;
 }
 const CustomerInfoProfile = ({
     customer,
+    updateCustomer,
 }: Params) => {
     const {setValues, getInputProps, resetDirty, isDirty, resetTouched, values} = useForm<Customer>({
         initialValues: {
@@ -104,7 +106,7 @@ const CustomerInfoProfile = ({
     };
 
     const saveValues = () => {
-        console.log('Saving values', values);
+        updateCustomer(values);
     };
 
     return (

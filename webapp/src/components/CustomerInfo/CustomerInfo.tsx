@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {Route, useParams} from 'react-router-dom';
 
-import {FullCustomerInfo} from '@/types/customers';
+import {Customer, FullCustomerInfo} from '@/types/customers';
 
-import {clientFetchCustomerByID} from '@/client';
+import {clientFetchCustomerByID, updateCustomer} from '@/client';
 
 import {CenteredText} from '../CenteredText';
 
@@ -59,6 +59,16 @@ const CustomerInfo = () => {
 
     const {config, plugins, packet, ...info} = customer;
 
+    const update = (c: Customer) => {
+        updateCustomer(c.id, c).
+            then((res) => {
+                if (!res) {
+                    return;
+                }
+                setCustomer(res);
+            });
+    };
+
     return (
         <>
             <RHSTitle>
@@ -91,6 +101,7 @@ const CustomerInfo = () => {
             >
                 <CustomerInfoProfile
                     customer={info}
+                    updateCustomer={update}
                 />
             </Route>
         </>

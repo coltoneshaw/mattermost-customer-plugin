@@ -286,7 +286,7 @@ func TestStoreCustomerData(t *testing.T) {
 			TotalPosts: packet.TotalPosts,
 		}
 
-		err = customerStore.UpdateCustomerData(customerID, packet, config, plugins)
+		err = customerStore.UpdateCustomerThroughUpload(customerID, packet, config, plugins)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -305,6 +305,49 @@ func TestStoreCustomerData(t *testing.T) {
 		assertEqual(t, customer, customerInfo.Customer, "customer info")
 		assertEqual(t, packetResponse, customerInfo.PacketValues, "packet data")
 		assertEqual(t, pluginsResponse, customerInfo.Plugins, "plugin data")
+	})
+}
+
+func TestUpdateCustomer(t *testing.T) {
+	db := setupTestDB(t)
+	customerStore := setupCustomerStore(t, db)
+	t.Run("update customer", func(t *testing.T) {
+		customer := app.Customer{
+			SiteURL:                 "www.test.com",
+			LicensedTo:              "test",
+			Name:                    "test",
+			AccountExecutive:        "bob",
+			CustomerSuccessManager:  "jane",
+			TechnicalAccountManager: "joe",
+			SalesforceID:            "123",
+			ZendeskID:               "456",
+			Type:                    "cloud",
+		}
+
+		// creates the customer
+		customerID, err := customerStore.GetCustomerID(customer.SiteURL, customer.LicensedTo)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		customer.ID = customerID
+
+		err = customerStore.UpdateCustomer(customer, "test")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		customerInfo, err := customerStore.GetCustomerByID(customerID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if customerInfo.LastUpdated == 0 {
+			t.Fatal("last updated not set in customer data")
+		}
+		customerInfo.LastUpdated = 0
+		assertEqual(t, customer, customerInfo.Customer, "customer info")
 	})
 }
 

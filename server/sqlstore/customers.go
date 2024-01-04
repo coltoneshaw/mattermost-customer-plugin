@@ -43,6 +43,13 @@ const (
 	auditTable    = "crm_audit"
 )
 
+type UpdateType string
+
+const (
+	Packet UpdateType = "packet"
+	User   UpdateType = "user"
+)
+
 func applyCustomerFilterOptionsSort(builder sq.SelectBuilder, options app.CustomerFilterOptions) (sq.SelectBuilder, error) {
 	var searchTerm string
 	if options.SearchTerm != "" {
@@ -433,136 +440,19 @@ func (s *customerStore) GetPlugins(customerID string) ([]app.CustomerPluginValue
 	return rawPlugins, nil
 }
 
-func (s *customerStore) storePacket(updateID string, customerID string, packet *model.SupportPacket) error {
-	_, err := s.store.execBuilder(s.store.db, sq.
-		Update(packetTable).
-		SetMap(map[string]interface{}{
-			"current": false,
-		}).
-		Where(sq.Eq{"customerId": customerID}))
+func (s *customerStore) createAuditRow(customerID string, updatedBy string) (id string, err error) {
 
-	if err != nil {
-		return errors.Wrap(err, "failed to delete old packet data")
-	}
-	newID := model.NewId()
-	_, err = s.store.execBuilder(s.store.db, sq.
-		Insert(packetTable).
-		SetMap(map[string]interface{}{
-			"ID":                    newID,
-			"customerId":            customerID,
-			"updateDataId":          updateID,
-			"licensedTo":            packet.LicenseTo,
-			"version":               packet.ServerVersion,
-			"serverOS":              packet.ServerOS,
-			"serverArch":            packet.ServerArchitecture,
-			"databaseType":          packet.DatabaseType,
-			"databaseVersion":       packet.DatabaseVersion,
-			"databaseSchemaVersion": packet.DatabaseSchemaVersion,
-			"fileDriver":            packet.FileDriver,
-			"activeUsers":           packet.ActiveUsers,
-			"dailyActiveUsers":      packet.DailyActiveUsers,
-			"monthlyActiveUsers":    packet.MonthlyActiveUsers,
-			"inactiveUserCount":     packet.InactiveUserCount,
-			"licenseSupportedUsers": packet.LicenseSupportedUsers,
-			"totalPosts":            packet.TotalPosts,
-			"totalChannels":         packet.TotalChannels,
-			"totalTeams":            packet.TotalTeams,
-			"current":               true,
-		}))
-	if err != nil {
-		return errors.Wrap(err, "failed to store packet")
+	if customerID == "" {
+		return "", errors.New("customerID cannot be empty")
 	}
 
-	return nil
-}
-
-func (s *customerStore) storeConfig(updateID string, customerID string, config *model.Config) error {
-	configJSON, err := json.Marshal(config)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal config")
+	var updateType UpdateType
+	if updatedBy != "" {
+		updateType = User
+	} else {
+		updateType = Packet
 	}
 
-	_, err = s.store.execBuilder(s.store.db, sq.
-		Update(configTable).
-		SetMap(map[string]interface{}{
-			"current": false,
-		}).
-		Where(sq.Eq{"customerId": customerID}))
-
-	if err != nil {
-		return errors.Wrap(err, "failed to delete old config data")
-	}
-
-	_, err = s.store.execBuilder(s.store.db, sq.
-		Insert(configTable).
-		SetMap(map[string]interface{}{
-			"ID":           model.NewId(),
-			"customerId":   customerID,
-			"updateDataId": updateID,
-			"config":       string(configJSON),
-			"current":      true,
-		}))
-	if err != nil {
-		return errors.Wrap(err, "failed to store config")
-	}
-
-	return nil
-}
-
-func (s *customerStore) storePlugins(updateID string, customerID string, plugins *model.PluginsResponse) error {
-	_, err := s.store.execBuilder(s.store.db, sq.
-		Update(pluginTable).
-		SetMap(map[string]interface{}{
-			"current": false,
-		}).
-		Where(sq.Eq{"customerId": customerID}))
-
-	if err != nil {
-		return errors.Wrap(err, "failed to delete old plugin data")
-	}
-
-	var parsedPlugins []app.CustomerPluginValues
-
-	for _, activePlugins := range plugins.Active {
-		parsedPlugins = append(parsedPlugins, app.CustomerPluginValues{
-			PluginID: activePlugins.Id,
-			Version:  activePlugins.Version,
-			IsActive: true,
-			Name:     activePlugins.Name,
-		})
-	}
-
-	for _, activePlugins := range plugins.Inactive {
-		parsedPlugins = append(parsedPlugins, app.CustomerPluginValues{
-			PluginID: activePlugins.Id,
-			Version:  activePlugins.Version,
-			IsActive: false,
-			Name:     activePlugins.Name,
-		})
-	}
-
-	for _, plugin := range parsedPlugins {
-		_, err := s.store.execBuilder(s.store.db, sq.
-			Insert(pluginTable).
-			SetMap(map[string]interface{}{
-				"ID":           model.NewId(),
-				"customerId":   customerID,
-				"updateDataId": updateID,
-				"pluginId":     plugin.PluginID,
-				"version":      plugin.Version,
-				"isActive":     plugin.IsActive,
-				"name":         plugin.Name,
-				"current":      true,
-			}))
-		if err != nil {
-			return errors.Wrap(err, "failed to store plugin")
-		}
-	}
-
-	return nil
-}
-
-func (s *customerStore) createAuditRow(customerID string) (id string, err error) {
 	id = model.NewId()
 	lastUpdated := model.GetMillis()
 	_, err = s.store.execBuilder(s.store.db, sq.
@@ -570,9 +460,9 @@ func (s *customerStore) createAuditRow(customerID string) (id string, err error)
 		SetMap(map[string]interface{}{
 			"ID":         id,
 			"customerId": customerID,
-			"updatedBy":  "",
+			"updatedBy":  updatedBy,
 			"updatedAt":  lastUpdated,
-			"updateType": "packet",
+			"updateType": updateType,
 			"path":       "",
 		}))
 	if err != nil {
@@ -592,29 +482,197 @@ func (s *customerStore) createAuditRow(customerID string) (id string, err error)
 	return id, nil
 }
 
-func (s *customerStore) UpdateCustomerData(customerID string, packet *model.SupportPacket, config *model.Config, plugins *model.PluginsResponse) error {
+func (s *customerStore) UpdateCustomer(customer app.Customer, userID string) error {
+	if customer.ID == "" {
+		return errors.New("customerID cannot be empty")
+	}
+	_, err := s.store.execBuilder(s.store.db, sq.
+		Update(customerTable).
+		SetMap(map[string]interface{}{
+			"name":                    customer.Name,
+			"customerSuccessManager":  customer.CustomerSuccessManager,
+			"accountExecutive":        customer.AccountExecutive,
+			"technicalAccountManager": customer.TechnicalAccountManager,
+			"salesforceId":            customer.SalesforceID,
+			"zendeskId":               customer.ZendeskID,
+			"type":                    customer.Type,
+			"customerChannel":         customer.CustomerChannel,
+			"gdriveLink":              customer.GDriveLink,
+			"lastUpdated":             model.GetMillis(),
+		}).
+		Where(sq.Eq{"id": customer.ID}))
+
+	return err
+
+}
+
+func (s *customerStore) UpdateCustomerData(customerID string, userID string, packet *app.CustomerPacketValues, config *model.Config, plugins []app.CustomerPluginValues) error {
 	if customerID == "" {
 		return errors.New("customerID cannot be empty")
 	}
 
-	auditID, err := s.createAuditRow(customerID)
+	if packet == nil && config == nil && plugins == nil {
+		return errors.New("must include at least one of packet, config, or plugins")
+	}
+
+	auditID, err := s.createAuditRow(customerID, userID)
 	if err != nil {
 		return errors.Wrap(err, "failed to create audit row")
 	}
 
-	err = s.storePacket(auditID, customerID, packet)
+	if packet != nil {
+		err = s.storePacket(auditID, customerID, packet)
+		if err != nil {
+			return errors.Wrap(err, "failed to store packet")
+		}
+	}
+
+	if config != nil {
+		err = s.storeConfig(auditID, customerID, config)
+		if err != nil {
+			return errors.Wrap(err, "failed to store config")
+		}
+	}
+
+	if plugins != nil {
+		err = s.storePlugins(auditID, customerID, plugins)
+		if err != nil {
+			return errors.Wrap(err, "failed to store plugins")
+		}
+	}
+
+	return nil
+}
+
+func (s *customerStore) storePacket(updateID string, customerID string, packet *app.CustomerPacketValues) error {
+	_, err := s.store.execBuilder(s.store.db, sq.
+		Update(packetTable).
+		SetMap(map[string]interface{}{
+			"current": false,
+		}).
+		Where(sq.Eq{"customerId": customerID}))
+
+	if err != nil {
+		return errors.Wrap(err, "failed to delete old packet data")
+	}
+	newID := model.NewId()
+	_, err = s.store.execBuilder(s.store.db, sq.
+		Insert(packetTable).
+		SetMap(map[string]interface{}{
+			"ID":                    newID,
+			"customerId":            customerID,
+			"updateDataId":          updateID,
+			"licensedTo":            packet.LicensedTo,
+			"version":               packet.Version,
+			"serverOS":              packet.ServerOS,
+			"serverArch":            packet.ServerArch,
+			"databaseType":          packet.DatabaseType,
+			"databaseVersion":       packet.DatabaseVersion,
+			"databaseSchemaVersion": packet.DatabaseSchemaVersion,
+			"fileDriver":            packet.FileDriver,
+			"activeUsers":           packet.ActiveUsers,
+			"dailyActiveUsers":      packet.DailyActiveUsers,
+			"monthlyActiveUsers":    packet.MonthlyActiveUsers,
+			"inactiveUserCount":     packet.InactiveUserCount,
+			"licenseSupportedUsers": packet.LicenseSupportedUsers,
+			"totalPosts":            packet.TotalPosts,
+			"totalChannels":         packet.TotalChannels,
+			"totalTeams":            packet.TotalTeams,
+			"current":               true,
+		}))
+
 	if err != nil {
 		return errors.Wrap(err, "failed to store packet")
 	}
 
-	err = s.storeConfig(auditID, customerID, config)
+	// updating licensedTo in the customer table to always keep it up to date
+	_, err = s.store.execBuilder(s.store.db, sq.
+		Update(customerTable).
+		SetMap(map[string]interface{}{
+			"licensedTo": packet.LicensedTo,
+		}).
+		Where(sq.Eq{"id": customerID}))
+
+	if err != nil {
+		return errors.Wrap(err, "failed to update licensedTo from packet update")
+	}
+
+	return nil
+}
+
+func (s *customerStore) storeConfig(updateID string, customerID string, config *model.Config) error {
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal config")
+	}
+
+	_, err = s.store.execBuilder(s.store.db, sq.
+		Update(configTable).
+		SetMap(map[string]interface{}{
+			"current": false,
+		}).
+		Where(sq.Eq{"customerId": customerID}))
+
+	if err != nil {
+		return errors.Wrap(err, "failed to set old config inactive")
+	}
+
+	// updating site url in the customer table to always keep it up to date
+	_, err = s.store.execBuilder(s.store.db, sq.
+		Update(customerTable).
+		SetMap(map[string]interface{}{
+			"siteURL": config.ServiceSettings.SiteURL,
+		}).
+		Where(sq.Eq{"id": customerID}))
+
+	if err != nil {
+		return errors.Wrap(err, "failed to update siteURL from config change.")
+	}
+
+	_, err = s.store.execBuilder(s.store.db, sq.
+		Insert(configTable).
+		SetMap(map[string]interface{}{
+			"ID":           model.NewId(),
+			"customerId":   customerID,
+			"updateDataId": updateID,
+			"config":       string(configJSON),
+			"current":      true,
+		}))
 	if err != nil {
 		return errors.Wrap(err, "failed to store config")
 	}
 
-	err = s.storePlugins(auditID, customerID, plugins)
+	return nil
+}
+
+func (s *customerStore) storePlugins(updateID string, customerID string, plugins []app.CustomerPluginValues) error {
+	_, err := s.store.execBuilder(s.store.db, sq.
+		Update(pluginTable).
+		SetMap(map[string]interface{}{
+			"current": false,
+		}).
+		Where(sq.Eq{"customerId": customerID}))
+
 	if err != nil {
-		return errors.Wrap(err, "failed to store plugins")
+		return errors.Wrap(err, "failed to delete old plugin data")
+	}
+
+	for _, plugin := range plugins {
+		_, err := s.store.execBuilder(s.store.db, sq.
+			Insert(pluginTable).
+			SetMap(map[string]interface{}{
+				"ID":           model.NewId(),
+				"customerId":   customerID,
+				"updateDataId": updateID,
+				"pluginId":     plugin.PluginID,
+				"version":      plugin.Version,
+				"isActive":     plugin.IsActive,
+				"name":         plugin.Name,
+				"current":      true,
+			}))
+		if err != nil {
+			return errors.Wrap(err, "failed to store plugin")
+		}
 	}
 
 	return nil

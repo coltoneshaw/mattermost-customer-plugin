@@ -230,7 +230,7 @@ func processSupportPackets(s *customerService, packetArray []*model.FileInfo, po
 			return err
 		}
 
-		err = s.store.UpdateCustomerData(customerID, packet, config, plugins)
+		err = s.store.UpdateCustomerThroughUpload(customerID, packet, config, plugins)
 
 		if err != nil {
 			logrus.WithError(err).Error("Error updating customer data.")

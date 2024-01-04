@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"github.com/coltoneshaw/mattermost-plugin-customers/server/app"
 	"github.com/coltoneshaw/mattermost-plugin-customers/server/config"
 	"github.com/gorilla/mux"
+	"github.com/mattermost/mattermost/server/public/model"
 	pluginapi "github.com/mattermost/mattermost/server/public/pluginapi"
 )
 
@@ -40,12 +42,22 @@ func NewCustomerHandler(router *mux.Router, customerService app.CustomerService,
 	//
 	customerRouter := customersRouter.PathPrefix("/{id:[A-Za-z0-9]+}").Subrouter()
 	customerRouter.HandleFunc("", withContext(handler.getCustomer)).Methods(http.MethodGet)
+	customerRouter.HandleFunc("", withContext(handler.updateCustomer)).Methods(http.MethodPut)
+
+	configRouter := customerRouter.PathPrefix("/config").Subrouter()
+	configRouter.HandleFunc("", withContext(handler.updateCustomerConfig)).Methods(http.MethodPut)
+
+	packetRouter := customerRouter.PathPrefix("/packet").Subrouter()
+	packetRouter.HandleFunc("", withContext(handler.updateCustomerPacket)).Methods(http.MethodPut)
+
+	pluginRouter := customerRouter.PathPrefix("/plugins").Subrouter()
+	pluginRouter.HandleFunc("", withContext(handler.updateCustomerPlugins)).Methods(http.MethodPut)
 
 	return handler
 }
 
 func (h *CustomerHandler) getCustomers(c *Context, w http.ResponseWriter, r *http.Request) {
-	opts, err := parseGetPlaybooksOptions(r.URL)
+	opts, err := parseGetCustomerOptions(r.URL)
 	if err != nil {
 		h.HandleErrorWithCode(w, c.logger, http.StatusBadRequest, fmt.Sprintf("failed to get customers: %s", err.Error()), nil)
 		return
@@ -77,7 +89,107 @@ func (h *CustomerHandler) getCustomer(c *Context, w http.ResponseWriter, r *http
 	ReturnJSON(w, &customer, http.StatusOK)
 }
 
-func parseGetPlaybooksOptions(u *url.URL) (app.CustomerFilterOptions, error) {
+func (h *CustomerHandler) updateCustomer(c *Context, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := r.Header.Get("Mattermost-User-ID")
+	var customer app.Customer
+	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
+		h.HandleErrorWithCode(w, c.logger, http.StatusBadRequest, "unable to decode customer", err)
+		return
+	}
+
+	customer.ID = vars["id"]
+	err := h.customerService.UpdateCustomer(customer, userID)
+	if err != nil {
+		h.HandleError(w, c.logger, err)
+		return
+	}
+
+	fullCustomer, err := h.customerService.GetCustomerByID(customer.ID)
+	if err != nil {
+		h.HandleError(w, c.logger, err)
+		return
+	}
+
+	ReturnJSON(w, &fullCustomer, http.StatusOK)
+}
+
+func (h *CustomerHandler) updateCustomerConfig(c *Context, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := r.Header.Get("Mattermost-User-ID")
+	var config model.Config
+	if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+		h.HandleErrorWithCode(w, c.logger, http.StatusBadRequest, "unable to decode customer config", err)
+		return
+	}
+
+	customerID := vars["id"]
+	err := h.customerService.UpdateCustomerData(customerID, userID, nil, &config, nil)
+	if err != nil {
+		h.HandleError(w, c.logger, err)
+		return
+	}
+
+	fullCustomer, err := h.customerService.GetCustomerByID(customerID)
+	if err != nil {
+		h.HandleError(w, c.logger, err)
+		return
+	}
+
+	ReturnJSON(w, &fullCustomer, http.StatusOK)
+}
+
+func (h *CustomerHandler) updateCustomerPacket(c *Context, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := r.Header.Get("Mattermost-User-ID")
+	var packet app.CustomerPacketValues
+	if err := json.NewDecoder(r.Body).Decode(&packet); err != nil {
+		h.HandleErrorWithCode(w, c.logger, http.StatusBadRequest, "unable to decode customer packet info", err)
+		return
+	}
+
+	customerID := vars["id"]
+	err := h.customerService.UpdateCustomerData(customerID, userID, &packet, nil, nil)
+	if err != nil {
+		h.HandleError(w, c.logger, err)
+		return
+	}
+
+	fullCustomer, err := h.customerService.GetCustomerByID(customerID)
+	if err != nil {
+		h.HandleError(w, c.logger, err)
+		return
+	}
+
+	ReturnJSON(w, &fullCustomer, http.StatusOK)
+}
+
+func (h *CustomerHandler) updateCustomerPlugins(c *Context, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := r.Header.Get("Mattermost-User-ID")
+	var plugins []app.CustomerPluginValues
+	if err := json.NewDecoder(r.Body).Decode(&plugins); err != nil {
+		h.HandleErrorWithCode(w, c.logger, http.StatusBadRequest, "unable to decode customer plugins", err)
+		return
+	}
+
+	customerID := vars["id"]
+	err := h.customerService.UpdateCustomerData(customerID, userID, nil, nil, plugins)
+	if err != nil {
+		h.HandleError(w, c.logger, err)
+		return
+	}
+
+	fullCustomer, err := h.customerService.GetCustomerByID(customerID)
+	if err != nil {
+		h.HandleError(w, c.logger, err)
+		return
+	}
+
+	ReturnJSON(w, &fullCustomer, http.StatusOK)
+}
+
+func parseGetCustomerOptions(u *url.URL) (app.CustomerFilterOptions, error) {
 	params := u.Query()
 
 	var searchTerm string

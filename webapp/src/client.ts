@@ -2,7 +2,7 @@ import {Client4, ClientError} from '@mattermost/client';
 import {Options, ClientResponse} from '@mattermost/types/client4';
 
 import {pluginId} from './manifest';
-import {CustomerFilterOptions, FullCustomerInfo, GetCustomerResult} from './types/customers';
+import {Customer, CustomerConfigValues, CustomerFilterOptions, CustomerPacketValues, CustomerPluginValues, FullCustomerInfo, GetCustomerResult} from './types/customers';
 
 let siteURL = '';
 let basePath = '';
@@ -30,6 +30,24 @@ export const getApiUrl = (): string => {
 
 export const doGet = async <TData = unknown>(url: string) => {
     const {data} = await doFetchWithResponse<TData>(url, {method: 'get'});
+
+    return data;
+};
+
+export const doPost = async <TData = unknown>(url: string, body = {}) => {
+    const {data} = await doFetchWithResponse<TData>(url, {
+        method: 'POST',
+        body,
+    });
+
+    return data;
+};
+
+export const doPut = async <TData = unknown>(url: string, body = {}) => {
+    const {data} = await doFetchWithResponse<TData>(url, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+    });
 
     return data;
 };
@@ -64,4 +82,20 @@ export function clientFetchCustomerByID(customerID: string) {
 export function clientFetchCustomers(opts?: CustomerFilterOptions) {
     const params = new URLSearchParams(opts).toString();
     return doGet<GetCustomerResult>(`${apiUrl}/customers${params ? `?${params}` : ''}`);
+}
+
+export function updateCustomer(customerID: string, customer: Partial<Customer>) {
+    return doPut<FullCustomerInfo>(`${apiUrl}/customers/${customerID}`, customer);
+}
+
+export function updateCustomerConfig(customerID: string, config: Partial<CustomerConfigValues>) {
+    return doPut<FullCustomerInfo>(`${apiUrl}/customers/${customerID}/config`, config);
+}
+
+export function updateCustomerPacket(customerID: string, packet: Partial<CustomerPacketValues>) {
+    return doPut<FullCustomerInfo>(`${apiUrl}/customers/${customerID}/packet`, packet);
+}
+
+export function updateCustomerPlugins(customerID: string, plugins: Partial<CustomerPluginValues>) {
+    return doPut<FullCustomerInfo>(`${apiUrl}/customers/${customerID}/plugins`, plugins);
 }

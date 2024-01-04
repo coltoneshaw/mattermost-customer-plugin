@@ -84,6 +84,9 @@ type CustomerService interface {
 
 	GetConfig(customerID string) (model.Config, error)
 	GetPlugins(customerID string) ([]CustomerPluginValues, error)
+
+	UpdateCustomer(customer Customer, userID string) error
+	UpdateCustomerData(customerID string, userID string, packet *CustomerPacketValues, config *model.Config, plugins []CustomerPluginValues) error
 }
 
 type CustomerStore interface {
@@ -101,7 +104,10 @@ type CustomerStore interface {
 	GetConfig(customerID string) (model.Config, error)
 	GetPlugins(customerID string) ([]CustomerPluginValues, error)
 
-	UpdateCustomerData(customerID string, packet *model.SupportPacket, config *model.Config, plugins *model.PluginsResponse) error
+	UpdateCustomer(customer Customer, userID string) error
+	UpdateCustomerData(customerID string, userID string, packet *CustomerPacketValues, config *model.Config, plugins []CustomerPluginValues) error
+
+	UpdateCustomerThroughUpload(customerID string, packet *model.SupportPacket, config *model.Config, plugins *model.PluginsResponse) error
 }
 
 type GetCustomersResult struct {

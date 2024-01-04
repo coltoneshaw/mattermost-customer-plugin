@@ -11,7 +11,10 @@ export const useDebounceSearch = (searchFunc: (term: string) => void) => {
         return () => {
             debouncedSearch.clear();
         };
-    }, [searchTermState, searchFunc]);
+
+    // adding searchFunc to the dependency array causes an infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTermState]);
 
     return [searchTermState, setSearchTermState] as const;
 };
