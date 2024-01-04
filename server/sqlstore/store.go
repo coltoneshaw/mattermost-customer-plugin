@@ -28,17 +28,15 @@ func New(pluginAPI PluginAPIClient) (*SQLStore, error) {
 
 	idleTimeMilliseconds := pluginAPI.Configuration.GetConfig().SqlSettings.ConnMaxIdleTimeMilliseconds
 	if idleTimeMilliseconds != nil {
-		db.SetConnMaxIdleTime(time.Duration(*idleTimeMilliseconds) * time.Millisecond)
+		db.SetConnMaxIdleTime(time.Duration(*idleTimeMilliseconds))
 	}
 
 	lifetimeMilliseconds := pluginAPI.Configuration.GetConfig().SqlSettings.ConnMaxLifetimeMilliseconds
 	if lifetimeMilliseconds != nil {
-		db.SetConnMaxLifetime(time.Duration(*idleTimeMilliseconds) * time.Millisecond)
+		db.SetConnMaxLifetime(time.Duration(*lifetimeMilliseconds))
 	}
 
 	builder := sq.StatementBuilder.PlaceholderFormat(sq.Question)
-	if pluginAPI.Store.DriverName() == model.DatabaseDriverPostgres {
-	}
 
 	if pluginAPI.Store.DriverName() != model.DatabaseDriverPostgres {
 		return nil, errors.Errorf("unsupported database driver %s", pluginAPI.Store.DriverName())
