@@ -1,7 +1,7 @@
 import {AdminConfig} from '@mattermost/types/config';
 
 // eslint-disable-next-line no-shadow
-export enum LicenseType {
+export const enum LicenseType {
     Cloud = 'cloud',
     Enterprise = 'enterprise',
     Professional = 'professional',
@@ -19,7 +19,7 @@ export type Customer = {
     technicalAccountManager: string;
     salesforceId: string;
     zendeskId: string;
-    type: LicenseType;
+    type: LicenseType | '';
     licensedTo: string;
     siteURL: string;
     customerChannel: string;

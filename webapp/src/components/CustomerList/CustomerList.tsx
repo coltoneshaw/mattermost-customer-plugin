@@ -4,6 +4,10 @@ import {Stack} from '@mantine/core';
 
 import styled from 'styled-components';
 
+import {useDispatch} from 'react-redux';
+
+import {getMissingProfilesByIds} from 'mattermost-redux/actions/users';
+
 import {Customer, CustomerSortOptions, SortDirection} from '@/types/customers';
 import {clientFetchCustomers} from '@/client';
 
@@ -31,7 +35,10 @@ const CustomerList = () => {
     const [page] = useState(0);
     const [perPage] = useState(25);
     const [searchTerm, setSearchTerm] = useState('');
+
     const [loading, setLoading] = useState(false);
+
+    const dispatch = useDispatch();
 
     useEffect(() => {
         setLoading(true);
@@ -49,10 +56,34 @@ const CustomerList = () => {
                 }
                 setCustomers(res.customers);
             });
+
         return () => {
             setLoading(true);
         };
     }, [orderBy, page, perPage, sortBy, searchTerm]);
+
+    useEffect(() => {
+        if (customers && customers.length > 0) {
+            const ids: string[] = [];
+            customers.forEach(({
+                technicalAccountManager,
+                customerSuccessManager,
+                accountExecutive,
+
+            }) => {
+                if (technicalAccountManager) {
+                    ids.push(technicalAccountManager);
+                }
+                if (customerSuccessManager) {
+                    ids.push(customerSuccessManager);
+                }
+                if (accountExecutive) {
+                    ids.push(accountExecutive);
+                }
+            });
+            dispatch(getMissingProfilesByIds([...new Set(ids)]));
+        }
+    }, [dispatch, customers]);
 
     let AlternateContainer = <CenteredText message={'No customers found'}/>;
     if (loading) {

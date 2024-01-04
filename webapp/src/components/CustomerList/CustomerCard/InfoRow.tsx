@@ -26,20 +26,22 @@ const InfoRow = ({
             >
                 {'Last updated: ' + getTimestamp(lastUpdated) }
             </Text>
-            <Badge
-                variant='filled'
-                size='lg'
-                sx={{
-                    color: 'rgba(var(--center-channel-color-rgb),0.72)',
-                    backgroundColor: 'rgba(var(--center-channel-color-rgb),0.08)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    letterSpacing: '0.5px',
-                }}
-            >
-                {type}
-            </Badge>
+            { type !== '' && (
+                <Badge
+                    variant='filled'
+                    size='lg'
+                    sx={{
+                        color: 'rgba(var(--center-channel-color-rgb),0.72)',
+                        backgroundColor: 'rgba(var(--center-channel-color-rgb),0.08)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        letterSpacing: '0.5px',
+                    }}
+                >
+                    {type}
+                </Badge>
+            ) }
         </InfoRowContainer>
     );
 };

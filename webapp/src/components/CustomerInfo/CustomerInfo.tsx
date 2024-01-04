@@ -26,6 +26,7 @@ const Container = styled.div`
     flex-direction: column;
     overflow-y: auto;
     gap: 1em;
+    padding: 1em;
 `;
 
 interface RouteParams {
@@ -36,6 +37,7 @@ const CustomerInfo = () => {
     const {id} = useParams<RouteParams>();
 
     const [customer, setCustomer] = useState<FullCustomerInfo | null>(null);
+
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -48,14 +50,14 @@ const CustomerInfo = () => {
                 }
                 setCustomer(res);
             });
+
         return () => {
             setLoading(true);
         };
     }, [id]);
 
-    let AlternateContainer = <CenteredText message={'Failed to pull customer info.'}/>;
-    if (loading) {
-        AlternateContainer = (
+    if (loading && !customer) {
+        return (
             <CenteredText
                 message={'Loading...'}
             />
@@ -63,7 +65,9 @@ const CustomerInfo = () => {
     }
 
     if (!customer) {
-        return AlternateContainer;
+        return (
+            <CenteredText message={'Failed to pull customer info.'}/>
+        );
     }
 
     const {config, plugins, packet, ...info} = customer;
@@ -75,10 +79,11 @@ const CustomerInfo = () => {
                     name={info.name}
                 />
             </RHSTitle>
+            <RhsPageHeader
+                id={info.id}
+            />
             <Container>
-                <RhsPageHeader
-                    id={info.id}
-                />
+
                 <Route path='/customers/:id/config'>
                     <CustomerInfoConfig
                         config={config}

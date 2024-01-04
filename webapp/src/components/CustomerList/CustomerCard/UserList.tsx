@@ -1,18 +1,17 @@
 import {Avatar, Tooltip} from '@mantine/core';
-import React, {useEffect} from 'react';
+import React from 'react';
 
-import {useDispatch, useSelector} from 'react-redux';
+import {useSelector} from 'react-redux';
 
 // import {GlobalState} from '@mattermost/types/lib/store';
 import {getUser} from 'mattermost-redux/selectors/entities/users';
 import {GlobalState} from 'mattermost-redux/types/store';
 import {getTeammateNameDisplaySetting} from 'mattermost-redux/selectors/entities/preferences';
-import {displayUsername} from 'mattermost-redux/utils/user_utils';
-import {getUser as fetchUser} from 'mattermost-redux/actions/users';
-import {Client4} from 'mattermost-redux/client';
+
 import {UserProfile} from 'mattermost-redux/types/users';
 
 import {Customer} from '@/types/customers';
+import {returnFormattedUsers} from '@/helpers/users';
 
 type ProfileParams = {
     userId: string;
@@ -22,31 +21,19 @@ const Profile = ({
     userId,
     role,
 }: ProfileParams) => {
-    const dispatch = useDispatch();
+    const teamnameNameDisplaySetting = useSelector<GlobalState, string | undefined>(getTeammateNameDisplaySetting) || '';
 
     const user = useSelector<GlobalState, UserProfile>((state) => getUser(state, userId));
-    const teamnameNameDisplaySetting = useSelector<GlobalState, string | undefined>(getTeammateNameDisplaySetting) || '';
-    useEffect(() => {
-        if (!user || !user.id || !dispatch) {
-            dispatch(fetchUser(userId));
-        }
-    }, [userId, dispatch, user]);
 
-    let name = null;
-    let profileUri = null;
-    if (user) {
-        const preferredName = displayUsername(user, teamnameNameDisplaySetting);
-        name = preferredName;
-        profileUri = Client4.getProfilePictureUrl(userId, user.last_picture_update);
-    }
+    const formattedUser = returnFormattedUsers([user], teamnameNameDisplaySetting)[0];
 
     return (
         <Tooltip
             withArrow={true}
-            label={name + ' - ' + role}
+            label={formattedUser.displayName + ' - ' + role}
         >
             <Avatar
-                src={profileUri || ''}
+                src={formattedUser.image || ''}
                 radius='xl'
                 sx={{
                     height: '32px',
