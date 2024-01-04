@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {Route, useParams} from 'react-router-dom';
-import styled from 'styled-components';
 
 import {FullCustomerInfo} from '@/types/customers';
 
@@ -16,18 +15,6 @@ import {CustomerInfoPacket} from './Packet/Packet';
 import {CustomerInfoPlugins} from './Plugins/Plugins';
 import {CustomerInfoProfile} from './Info/Info';
 import {RhsPageHeader} from './RHSPageHeader';
-
-const Container = styled.div`
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    flex-direction: column;
-    overflow-y: auto;
-    gap: 1em;
-    padding: 1em;
-`;
 
 interface RouteParams {
     id: string;
@@ -82,32 +69,30 @@ const CustomerInfo = () => {
             <RhsPageHeader
                 id={info.id}
             />
-            <Container>
 
-                <Route path='/customers/:id/config'>
-                    <CustomerInfoConfig
-                        config={config}
-                    />
-                </Route>
-                <Route path='/customers/:id/packet'>
-                    <CustomerInfoPacket
-                        packet={packet}
-                    />
-                </Route>
-                <Route path='/customers/:id/plugins'>
-                    <CustomerInfoPlugins
-                        plugins={plugins}
-                    />
-                </Route>
-                <Route
-                    path='/customers/:id'
-                    exact={true}
-                >
-                    <CustomerInfoProfile
-                        customer={info}
-                    />
-                </Route>
-            </Container>
+            <Route path='/customers/:id/config'>
+                <CustomerInfoConfig
+                    config={config}
+                />
+            </Route>
+            <Route path='/customers/:id/packet'>
+                <CustomerInfoPacket
+                    packet={packet}
+                />
+            </Route>
+            <Route path='/customers/:id/plugins'>
+                <CustomerInfoPlugins
+                    plugins={plugins}
+                />
+            </Route>
+            <Route
+                path='/customers/:id'
+                exact={true}
+            >
+                <CustomerInfoProfile
+                    customer={info}
+                />
+            </Route>
         </>
     );
 };

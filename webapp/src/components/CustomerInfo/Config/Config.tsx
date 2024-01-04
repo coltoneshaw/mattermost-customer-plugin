@@ -4,6 +4,7 @@ import {Code} from '@mantine/core';
 
 import {CustomerConfigValues} from '@/types/customers';
 import {CenteredText} from '@/components/CenteredText';
+import {Container} from '@/components/Group';
 
 type Params = {
     config: CustomerConfigValues | null;
@@ -19,14 +20,14 @@ const CustomerInfoConfig = ({
         );
     }
     return (
-        <>
+        <Container>
             <Code
                 block={true}
                 style={{
                     width: '100%',
                 }}
             >{JSON.stringify(config, null, 4)}</Code>
-        </>
+        </Container>
 
     );
 };

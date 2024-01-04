@@ -1,11 +1,13 @@
 import React, {useEffect} from 'react';
 
-import {Group, TextInput} from '@mantine/core';
+import {TextInput} from '@mantine/core';
 
 import {UseFormReturnType, useForm} from '@mantine/form';
 
 import {Customer, LicenseType} from '@/types/customers';
 import {CenteredText} from '@/components/CenteredText';
+
+import {Group, Container} from '@/components/Group';
 
 import {FormUserSelector} from './ProfileSelector';
 import {FormDropdown} from './CustomerTypeSelector';
@@ -107,83 +109,85 @@ const CustomerInfoProfile = ({
 
     return (
         <>
-            <FormTextInput
-                getInputProps={getInputProps}
-                label={isDirty() ? 'Customer Name (Unsaved Changes)' : 'Customer Name'}
-                placeholder={'Customer Name'}
-                formKey={'name'}
-            />
-            <FormDropdown
-                getInputProps={getInputProps}
-                label={'License Type'}
-                formKey={'type'}
-                data={[
-                    {value: LicenseType.Enterprise, label: 'Enterprise'},
-                    {value: LicenseType.Professional, label: 'Professional'},
-                    {value: LicenseType.Cloud, label: 'Cloud'},
-                    {value: LicenseType.Free, label: 'Free'},
-                    {value: LicenseType.Trial, label: 'Trial'},
-                    {value: LicenseType.Other, label: 'Other'},
-                ]}
-            />
+            <Container>
+                <FormTextInput
+                    getInputProps={getInputProps}
+                    label={isDirty() ? 'Customer Name (Unsaved Changes)' : 'Customer Name'}
+                    placeholder={'Customer Name'}
+                    formKey={'name'}
+                />
+                <FormDropdown
+                    getInputProps={getInputProps}
+                    label={'License Type'}
+                    formKey={'type'}
+                    data={[
+                        {value: LicenseType.Enterprise, label: 'Enterprise'},
+                        {value: LicenseType.Professional, label: 'Professional'},
+                        {value: LicenseType.Cloud, label: 'Cloud'},
+                        {value: LicenseType.Free, label: 'Free'},
+                        {value: LicenseType.Trial, label: 'Trial'},
+                        {value: LicenseType.Other, label: 'Other'},
+                    ]}
+                />
 
-            <FormUserSelector
-                getInputProps={getInputProps}
-                label={'Account Executive'}
-                formKey={'accountExecutive'}
-
-                // profiles={teamMembers}
-            />
-            <FormUserSelector
-                getInputProps={getInputProps}
-                label={'Customer Success Manager'}
-                formKey={'customerSuccessManager'}
-
-                // profiles={teamMembers}
-            />
-            <FormUserSelector
-                getInputProps={getInputProps}
-                label={'Technical Account Manager'}
-                formKey={'technicalAccountManager'}
-
-                // profiles={teamMembers}
-            />
-            <FormTextInput
-                getInputProps={getInputProps}
-                label={'Google Drive Link'}
-                formKey={'GDriveLink'}
-            />
-            <FormTextInput
-                getInputProps={getInputProps}
-                label={'Customer PS Channel'}
-                formKey={'customerChannel'}
-            />
-            <FormTextInput
-                getInputProps={getInputProps}
-                label={'Salesforce ID'}
-                formKey={'salesforceId'}
-            />
-            <FormTextInput
-                getInputProps={getInputProps}
-                label={'Zendesk ID'}
-                formKey={'zendeskId'}
-            />
-            <Group>
-                <button
-                    className='btn btn-primary '
-                    onClick={saveValues}
-                    disabled={!isDirty()}
+                <FormUserSelector
+                    getInputProps={getInputProps}
+                    label={'Account Executive'}
+                    formKey={'accountExecutive'}
+                />
+                <FormUserSelector
+                    getInputProps={getInputProps}
+                    label={'Customer Success Manager'}
+                    formKey={'customerSuccessManager'}
+                />
+                <FormUserSelector
+                    getInputProps={getInputProps}
+                    label={'Technical Account Manager'}
+                    formKey={'technicalAccountManager'}
+                />
+                <FormTextInput
+                    getInputProps={getInputProps}
+                    label={'Google Drive Link'}
+                    formKey={'GDriveLink'}
+                />
+                <FormTextInput
+                    getInputProps={getInputProps}
+                    label={'Customer PS Channel'}
+                    formKey={'customerChannel'}
+                />
+                <FormTextInput
+                    getInputProps={getInputProps}
+                    label={'Salesforce ID'}
+                    formKey={'salesforceId'}
+                />
+                <FormTextInput
+                    getInputProps={getInputProps}
+                    label={'Zendesk ID'}
+                    formKey={'zendeskId'}
+                />
+            </Container>
+            {isDirty() && (
+                <Group
+                    style={{
+                        borderTop: '1px solid rgba(var(--center-channel-color-rgb), 0.08)',
+                        padding: '1em',
+                    }}
                 >
-                    {'Save'}
-                </button>
-                <button
-                    className='btn btn-tertiary'
-                    onClick={resetForm}
-                    disabled={!isDirty()}
-                >
-                    {'Cancel'}
-                </button>
-            </Group>
+                    <button
+                        className='btn btn-primary'
+                        onClick={saveValues}
+                    >
+                        {'Save'}
+                    </button>
+                    <button
+                        className='btn btn-tertiary'
+                        onClick={resetForm}
+                    >
+                        {'Cancel'}
+                    </button>
+                </Group>
+            )
+            }
 
         </>
 
