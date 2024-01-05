@@ -3,6 +3,7 @@ module github.com/coltoneshaw/mattermost-plugin-customers
 go 1.19
 
 require (
+	github.com/golang/mock v1.6.0
 	github.com/mattermost/mattermost/server/public v0.0.12
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
@@ -11,7 +12,6 @@ require (
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/golang/mock v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
@@ -60,7 +60,6 @@ require (
 	github.com/hashicorp/go-hclog v1.6.2 // indirect
 	github.com/hashicorp/go-plugin v1.6.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
-	github.com/isacikgoz/morph v0.0.0-20220406131225-b96d2fb806f1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattermost/go-i18n v1.11.1-0.20211013152124-5c415071e404 // indirect
