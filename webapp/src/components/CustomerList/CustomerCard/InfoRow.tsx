@@ -12,10 +12,10 @@ align-items: center;
 flexDirection: row;
 `;
 
-type InfoRowParams = Pick<Customer, 'lastUpdated' | 'type'>
+type InfoRowParams = Pick<Customer, 'lastUpdated' | 'licenseType'>
 const InfoRow = ({
     lastUpdated,
-    type,
+    licenseType,
 }: InfoRowParams) => {
     return (
         <InfoRowContainer>
@@ -26,7 +26,7 @@ const InfoRow = ({
             >
                 {'Last updated: ' + getTimestamp(lastUpdated) }
             </Text>
-            { type !== '' && (
+            { licenseType !== '' && (
                 <Badge
                     variant='filled'
                     size='lg'
@@ -39,7 +39,7 @@ const InfoRow = ({
                         letterSpacing: '0.5px',
                     }}
                 >
-                    {type}
+                    {licenseType}
                 </Badge>
             ) }
         </InfoRowContainer>

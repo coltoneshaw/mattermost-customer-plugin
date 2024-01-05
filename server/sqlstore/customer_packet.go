@@ -76,25 +76,34 @@ func (s *customerStore) storePacket(userID string, customerID string, packet *ap
 		Insert(packetTable).
 		SetMap(map[string]interface{}{
 			"ID":                    newID,
-			"customerId":            customerID,
-			"updateDataId":          auditID,
-			"licensedTo":            packet.LicensedTo,
-			"version":               packet.Version,
-			"serverOS":              packet.ServerOS,
-			"serverArch":            packet.ServerArch,
-			"databaseType":          packet.DatabaseType,
-			"databaseVersion":       packet.DatabaseVersion,
-			"databaseSchemaVersion": packet.DatabaseSchemaVersion,
-			"fileDriver":            packet.FileDriver,
-			"activeUsers":           packet.ActiveUsers,
-			"dailyActiveUsers":      packet.DailyActiveUsers,
-			"monthlyActiveUsers":    packet.MonthlyActiveUsers,
-			"inactiveUserCount":     packet.InactiveUserCount,
-			"licenseSupportedUsers": packet.LicenseSupportedUsers,
-			"totalPosts":            packet.TotalPosts,
-			"totalChannels":         packet.TotalChannels,
-			"totalTeams":            packet.TotalTeams,
-			"current":               true,
+			"AuditID":               auditID,
+			"CustomerID":            customerID,
+			"Current":               true,
+			"LicensedTo":            packet.LicensedTo,
+			"Version":               packet.Version,
+			"ServerOS":              packet.ServerOS,
+			"ServerArch":            packet.ServerArch,
+			"DatabaseType":          packet.DatabaseType,
+			"DatabaseVersion":       packet.DatabaseVersion,
+			"DatabaseSchemaVersion": packet.DatabaseSchemaVersion,
+			"FileDriver":            packet.FileDriver,
+			"ActiveUsers":           packet.ActiveUsers,
+			"DailyActiveUsers":      packet.DailyActiveUsers,
+			"MonthlyActiveUsers":    packet.MonthlyActiveUsers,
+			"InactiveUserCount":     packet.InactiveUserCount,
+			"LicenseSupportedUsers": packet.LicenseSupportedUsers,
+			"TotalPosts":            packet.TotalPosts,
+			"TotalChannels":         packet.TotalChannels,
+			"TotalTeams":            packet.TotalTeams,
+			"ElasticServerVersion":  packet.ElasticServerVersion,
+			"Metrics":               packet.Metrics,
+			"MetricService":         packet.MetricService,
+			"HostingType":           packet.HostingType,
+			"DeploymentType":        packet.DeploymentType,
+			"MobileApp":             packet.MobileApp,
+			"ProductsInUse":         packet.ProductsInUse,
+			"SAMLProvider":          packet.SAMLProvider,
+			"LDAPProvider":          packet.LDAPProvider,
 		}))
 
 	if err != nil {
@@ -105,7 +114,7 @@ func (s *customerStore) storePacket(userID string, customerID string, packet *ap
 	_, err = s.store.execBuilder(s.store.db, sq.
 		Update(customerTable).
 		SetMap(map[string]interface{}{
-			"licensedTo": packet.LicensedTo,
+			"LicensedTo": packet.LicensedTo,
 		}).
 		Where(sq.Eq{"id": customerID}))
 

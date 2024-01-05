@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS crm_audit (
-	id TEXT PRIMARY KEY,
-	customerId TEXT NOT NULL,
-	updatedBy TEXT NOT NULL,
-	updatedAt BIGINT NOT NULL,
-	updateType TEXT NOT NULL,
-	path TEXT NOT NULL,
-	diff JSONB NOT NULL
+	ID TEXT PRIMARY KEY,
+	CustomerID TEXT NOT NULL,
+	UpdatedBy TEXT NOT NULL,
+	UpdatedAt BIGINT NOT NULL,
+	UpdateType TEXT NOT NULL,
+	Path TEXT NOT NULL,
+	Diff JSONB NOT NULL
 );

@@ -96,11 +96,11 @@ func (s *customerStore) storeConfig(userID string, customerID string, config *mo
 	_, err = s.store.execBuilder(s.store.db, sq.
 		Insert(configTable).
 		SetMap(map[string]interface{}{
-			"ID":           model.NewId(),
-			"customerId":   customerID,
-			"updateDataId": auditID,
-			"config":       string(configJSON),
-			"current":      true,
+			"ID":         model.NewId(),
+			"AuditID":    auditID,
+			"Current":    true,
+			"CustomerId": customerID,
+			"Config":     string(configJSON),
 		}))
 	if err != nil {
 		return errors.Wrap(err, "failed to store config")

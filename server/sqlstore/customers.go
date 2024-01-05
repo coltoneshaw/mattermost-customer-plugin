@@ -118,18 +118,58 @@ func applyCustomerFilterOptionsSort(builder sq.SelectBuilder, options app.Custom
 func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.CustomerStore {
 	customerSelect := sqlStore.builder.
 		Select(
-			"ci.id", "ci.name", "ci.type",
-			"ci.customerSuccessManager", "ci.accountExecutive",
-			"ci.technicalAccountManager", "ci.salesforceId", "ci.zendeskId",
-			"ci.siteUrl", "ci.licensedTo", "ci.gdriveLink", "ci.customerChannel", "ci.lastUpdated").
+			"ci.ID",
+			"ci.Name",
+			"ci.LastUpdated",
+			"ci.SalesforceId",
+			"ci.ZendeskID",
+			"ci.LicensedTo",
+			"ci.CustomerSuccessManager",
+			"ci.AccountExecutive",
+			"ci.TechnicalAccountManager",
+			"ci.ProductManager",
+			"ci.LicensedTo",
+			"ci.SiteUrl",
+			"ci.LicenseType",
+			"ci.CustomerChannel",
+			"ci.GDriveLink",
+			"ci.AirGapped",
+			"ci.AirGappedReason",
+			"ci.Region",
+			"ci.Status",
+			"ci.CompanyType",
+			"ci.CodeWord",
+		).
 		From(customerTable + " as ci")
 
 	packetValuesSelect := sqlStore.builder.
 		Select(
-			"cp.licensedTo", "cp.version", "cp.serverOS", "cp.serverArch",
-			"cp.databaseType", "cp.databaseVersion", "cp.databaseSchemaVersion",
-			"cp.fileDriver", "cp.activeUsers", "cp.dailyActiveUsers", "cp.monthlyActiveUsers",
-			"cp.inactiveUserCount", "cp.licenseSupportedUsers", "cp.totalPosts", "cp.totalChannels", "cp.totalTeams").
+			"cp.LicensedTo",
+			"cp.Version",
+			"cp.ServerOS",
+			"cp.ServerArch",
+			"cp.DatabaseType",
+			"cp.DatabaseVersion",
+			"cp.DatabaseSchemaVersion",
+			"cp.FileDriver",
+			"cp.ActiveUsers",
+			"cp.DailyActiveUsers",
+			"cp.MonthlyActiveUsers",
+			"cp.InactiveUserCount",
+			"cp.LicenseSupportedUsers",
+			"cp.TotalPosts",
+			"cp.TotalChannels",
+			"cp.TotalTeams",
+			"cp.Metrics",
+			"cp.ElasticServerVersion",
+			"cp.MetricService",
+			"cp.HostingType",
+			"cp.DeploymentType",
+			"cp.MobileApp",
+			"cp.ProductsInUse",
+			"cp.SAMLProvider",
+			"cp.LDAPProvider",
+		).
 		From(packetTable + " as cp")
 
 	configValuesSelect := sqlStore.builder.
@@ -137,7 +177,13 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 		From(configTable + " as ccv")
 
 	pluginValuesSelect := sqlStore.builder.
-		Select("cpv.pluginId", "cpv.version", "cpv.isActive", "cpv.name").
+		Select(
+			"cpv.PluginID",
+			"cpv.Version",
+			"cpv.IsActive",
+			"cpv.Name",
+			"cpv.HomePageURL",
+		).
 		From(pluginTable + " as cpv")
 
 	return &customerStore{
@@ -257,17 +303,23 @@ func (s *customerStore) createCustomer(siteURL string, licensedTo string) (strin
 		SetMap(map[string]interface{}{
 			"ID":                      newID,
 			"Name":                    licensedTo,
+			"LastUpdated":             model.GetMillis(),
+			"SalesforceId":            "",
+			"ZendeskId":               "",
 			"CustomerSuccessManager":  "",
 			"AccountExecutive":        "",
 			"TechnicalAccountManager": "",
-			"SalesforceId":            "",
-			"ZendeskId":               "",
+			"ProductManager":          "",
 			"LicensedTo":              licensedTo,
 			"SiteUrl":                 siteURL,
-			"Type":                    "",
-			"GdriveLink":              "",
+			"LicenseType":             "",
 			"CustomerChannel":         "",
-			"LastUpdated":             model.GetMillis(),
+			"GDriveLink":              "",
+			"AirGapped":               false,
+			"AirGappedReason":         "",
+			"Region":                  "",
+			"Status":                  "",
+			"CompanyType":             "",
 		}))
 	if err != nil {
 		return "", errors.Wrap(err, "failed to store new customer")
@@ -345,15 +397,21 @@ func (s *customerStore) UpdateCustomer(customer app.Customer) error {
 		Update(customerTable).
 		SetMap(map[string]interface{}{
 			"name":                    customer.Name,
+			"lastUpdated":             model.GetMillis(),
+			"salesforceId":            customer.SalesforceID,
+			"zendeskId":               customer.ZendeskID,
 			"customerSuccessManager":  customer.CustomerSuccessManager,
 			"accountExecutive":        customer.AccountExecutive,
 			"technicalAccountManager": customer.TechnicalAccountManager,
-			"salesforceId":            customer.SalesforceID,
-			"zendeskId":               customer.ZendeskID,
-			"type":                    customer.Type,
+			"productManager":          customer.ProductManager,
+			"licenseType":             customer.LicenseType,
 			"customerChannel":         customer.CustomerChannel,
 			"gdriveLink":              customer.GDriveLink,
-			"lastUpdated":             model.GetMillis(),
+			"airGapped":               customer.AirGapped,
+			"airGappedReason":         customer.AirGappedReason,
+			"region":                  customer.Region,
+			"status":                  customer.Status,
+			"companyType":             customer.CompanyType,
 		}).
 		Where(sq.Eq{"id": customer.ID}))
 

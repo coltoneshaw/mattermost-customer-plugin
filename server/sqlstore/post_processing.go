@@ -25,28 +25,31 @@ func (s *customerStore) rawPacketToPacket(rawPacket *model.SupportPacket) *app.C
 	packet.TotalPosts = rawPacket.TotalPosts
 	packet.TotalChannels = rawPacket.TotalChannels
 	packet.TotalTeams = rawPacket.TotalTeams
-
+	packet.LDAPProvider = rawPacket.LdapVendorName
+	packet.ElasticServerVersion = rawPacket.ElasticServerVersion
 	return &packet
 }
 
 func (s *customerStore) rawPluginstoPlugins(rawPlugins *model.PluginsResponse) []app.CustomerPluginValues {
 	var parsedPlugins []app.CustomerPluginValues
 
-	for _, activePlugins := range rawPlugins.Active {
+	for _, plugin := range rawPlugins.Active {
 		parsedPlugins = append(parsedPlugins, app.CustomerPluginValues{
-			PluginID: activePlugins.Id,
-			Version:  activePlugins.Version,
-			IsActive: true,
-			Name:     activePlugins.Name,
+			PluginID:    plugin.Id,
+			Version:     plugin.Version,
+			IsActive:    true,
+			Name:        plugin.Name,
+			HomePageURL: plugin.HomepageURL,
 		})
 	}
 
-	for _, activePlugins := range rawPlugins.Inactive {
+	for _, plugin := range rawPlugins.Inactive {
 		parsedPlugins = append(parsedPlugins, app.CustomerPluginValues{
-			PluginID: activePlugins.Id,
-			Version:  activePlugins.Version,
-			IsActive: false,
-			Name:     activePlugins.Name,
+			PluginID:    plugin.Id,
+			Version:     plugin.Version,
+			IsActive:    false,
+			Name:        plugin.Name,
+			HomePageURL: plugin.HomepageURL,
 		})
 	}
 

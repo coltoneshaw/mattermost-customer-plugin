@@ -66,7 +66,7 @@ const CustomerCard = ({
             />
             <InfoRow
                 lastUpdated={customer.lastUpdated}
-                type={customer.type}
+                licenseType={customer.licenseType}
             />
         </CustomerCardContainer>
 

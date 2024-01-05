@@ -14,17 +14,24 @@ export const enum LicenseType {
 export type Customer = {
     id: string;
     name: string;
+    lastUpdated: number;
+    salesforceId: string;
+    zendeskId: string;
     customerSuccessManager: string;
     accountExecutive: string;
     technicalAccountManager: string;
-    salesforceId: string;
-    zendeskId: string;
-    type: LicenseType | '';
+    productManager: string;
     licensedTo: string;
     siteURL: string;
+    licenseType: LicenseType | '';
     customerChannel: string;
     GDriveLink: string;
-    lastUpdated: number;
+    airGapped: boolean;
+    airGappedReason: string;
+    region: string;
+    status: string;
+    companyType: string;
+    codeWord: string;
 }
 
 export type CustomerPacketValues = {
@@ -44,9 +51,19 @@ export type CustomerPacketValues = {
     totalPosts: number;
     totalChannels: number;
     totalTeams: number;
+    elasticServerVersion: string;
+    metrics: boolean;
+    metricService: string;
+    hostingType: string;
+    deploymentType: string;
+    mobileApp: string;
+    productsInUse: string;
+    samlProvider: string;
+    ldapProvider: string;
 }
 
 export type CustomerPluginValues = {
+    homePageURL: string;
     pluginID: string;
     version: string;
     isActive: boolean,

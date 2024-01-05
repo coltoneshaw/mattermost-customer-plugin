@@ -73,14 +73,15 @@ func (s *customerStore) storePlugins(userID string, customerID string, plugins [
 		_, err := s.store.execBuilder(s.store.db, sq.
 			Insert(pluginTable).
 			SetMap(map[string]interface{}{
-				"ID":           model.NewId(),
-				"customerId":   customerID,
-				"updateDataId": auditID,
-				"pluginId":     plugin.PluginID,
-				"version":      plugin.Version,
-				"isActive":     plugin.IsActive,
-				"name":         plugin.Name,
-				"current":      true,
+				"ID":          model.NewId(),
+				"AuditID":     auditID,
+				"CustomerID":  customerID,
+				"Current":     true,
+				"PluginID":    plugin.PluginID,
+				"Version":     plugin.Version,
+				"IsActive":    plugin.IsActive,
+				"Name":        plugin.Name,
+				"HomePageURL": plugin.HomePageURL,
 			}))
 		if err != nil {
 			return errors.Wrap(err, "failed to store plugin")

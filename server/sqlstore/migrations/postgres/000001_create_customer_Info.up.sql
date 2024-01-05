@@ -1,28 +1,22 @@
-DO
-$$
-BEGIN
-  IF NOT EXISTS (SELECT * FROM pg_type typ
-                            INNER JOIN pg_namespace nsp ON nsp.oid = typ.typnamespace
-                        WHERE nsp.nspname = current_schema()
-                            AND typ.typname = 'customer_type') THEN
-    CREATE TYPE customer_type AS ENUM ('cloud', 'enterprise', 'professional', 'trial', 'free', 'nonprofit', 'other', '');
-  END IF;
-END;
-$$
-LANGUAGE plpgsql;
-
 CREATE TABLE IF NOT EXISTS crm_customers (
 	ID TEXT PRIMARY KEY,
-	name TEXT NOT NULL,
-	lastUpdated bigint NOT NULL,
-	customerSuccessManager TEXT DEFAULT '',
-	accountExecutive TEXT DEFAULT '',
-	technicalAccountManager TEXT DEFAULT '',
-	salesforceId TEXT DEFAULT '',
-	zendeskId TEXT DEFAULT '',
-	licensedTo TEXT DEFAULT '',
-	siteUrl TEXT DEFAULT '',
-	type customer_type NOT NULL,
-	customerChannel TEXT DEFAULT '',
-	gdriveLink TEXT DEFAULT ''
+	Name TEXT NOT NULL,
+	LastUpdated bigint NOT NULL,
+	SalesforceId TEXT DEFAULT '',
+	ZendeskId TEXT DEFAULT '',
+	CustomerSuccessManager TEXT DEFAULT '',
+	AccountExecutive TEXT DEFAULT '',
+	TechnicalAccountManager TEXT DEFAULT '',
+	ProductManager TEXT DEFAULT '',
+	LicensedTo TEXT DEFAULT '',
+	SiteUrl TEXT DEFAULT '',
+	LicenseType TEXT NOT NULL,
+	CustomerChannel TEXT DEFAULT '',
+	GDriveLink TEXT DEFAULT '',
+	AirGapped BOOLEAN DEFAULT FALSE,
+	AirGappedReason TEXT DEFAULT '',
+	Region TEXT DEFAULT '',
+	Status TEXT DEFAULT '',
+	CompanyType TEXT DEFAULT '',
+	codeWord TEXT DEFAULT ''
 );

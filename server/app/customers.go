@@ -17,23 +17,29 @@ const (
 type Customer struct {
 	ID                      string      `json:"id"`
 	Name                    string      `json:"name"`
+	LastUpdated             int64       `json:"lastUpdated"`
+	SalesforceID            string      `json:"salesforceId"`
+	ZendeskID               string      `json:"zendeskId"`
 	CustomerSuccessManager  string      `json:"customerSuccessManager"`
 	AccountExecutive        string      `json:"accountExecutive"`
 	TechnicalAccountManager string      `json:"technicalAccountManager"`
-	SalesforceID            string      `json:"salesforceId"`
-	ZendeskID               string      `json:"zendeskId"`
-	Type                    LicenseType `json:"type"`
-	// This field may be removed eventually, but this is just a way to try and do a check on
-	// who this customer belongs to when a support packet comes in
-	LicensedTo      string `json:"licensedTo"`
-	SiteURL         string `json:"siteURL"`
-	CustomerChannel string `json:"customerChannel"`
-	GDriveLink      string `json:"GDriveLink"`
-	LastUpdated     int64  `json:"lastUpdated"`
+	ProductManager          string      `json:"productManager"`
+	LicensedTo              string      `json:"licensedTo"`
+	SiteURL                 string      `json:"siteURL"`
+	LicenseType             LicenseType `json:"licenseType"`
+	CustomerChannel         string      `json:"customerChannel"`
+	GDriveLink              string      `json:"GDriveLink"`
+	AirGapped               bool        `json:"airGapped"`
+	AirGappedReason         string      `json:"airGappedReason"`
+	Region                  string      `json:"region"`      // emea, apac, amer
+	Status                  string      `json:"status"`      // gold standard, onboarding, stable
+	CompanyType             string      `json:"companyType"` // enterprise, federal, midmarket, smb,
+	CodeWord                string      `json:"codeWord"`
 }
 
+// todo - modify the licnesedTo to match mattermost with licenseto
 type CustomerPacketValues struct {
-	// todo - modify this value to be licenseTo to match mattermost
+	// AuditID               string `json:"auditID"`
 	LicensedTo            string `json:"licensedTo"`
 	Version               string `json:"version"`
 	ServerOS              string `json:"serverOS"`
@@ -50,13 +56,23 @@ type CustomerPacketValues struct {
 	TotalPosts            int    `json:"totalPosts"`
 	TotalChannels         int    `json:"totalChannels"`
 	TotalTeams            int    `json:"totalTeams"`
+	ElasticServerVersion  string `json:"elasticServerVersion"`
+	Metrics               bool   `json:"metrics"` // This will be a true / false or string of what they're using.
+	MetricService         string `json:"metricService"`
+	HostingType           string `json:"hostingType"`    // aws, onprem, azure, cloud,
+	DeploymentType        string `json:"deploymentType"` //kube, tar, docker, AKS, EKS, GKE, etc
+	MobileApp             bool   `json:"mobileApp"`      // true, false, NA
+	ProductsInUse         string `json:"productsInUse"`  // calls, playbooks
+	SAMLProvider          string `json:"samlProvider"`   // Name of their SAML technology
+	LDAPProvider          string `json:"ldapProvider"`   // Name of their LDAP technology
 }
 
 type CustomerPluginValues struct {
-	PluginID string `json:"pluginID"`
-	Version  string `json:"version"`
-	IsActive bool   `json:"isActive"`
-	Name     string `json:"name"`
+	PluginID    string `json:"pluginID"`
+	Version     string `json:"version"`
+	IsActive    bool   `json:"isActive"`
+	Name        string `json:"name"`
+	HomePageURL string `json:"homePageURL"`
 }
 
 type FullCustomerInfo struct {
