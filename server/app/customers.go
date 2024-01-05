@@ -33,6 +33,7 @@ type Customer struct {
 }
 
 type CustomerPacketValues struct {
+	// todo - modify this value to be licenseTo to match mattermost
 	LicensedTo            string `json:"licensedTo"`
 	Version               string `json:"version"`
 	ServerOS              string `json:"serverOS"`
@@ -85,7 +86,7 @@ type CustomerService interface {
 	GetConfig(customerID string) (model.Config, error)
 	GetPlugins(customerID string) ([]CustomerPluginValues, error)
 
-	UpdateCustomer(customer Customer, userID string) error
+	UpdateCustomer(customer Customer) error
 	UpdateCustomerData(customerID string, userID string, packet *CustomerPacketValues, config *model.Config, plugins []CustomerPluginValues) error
 }
 
@@ -104,7 +105,7 @@ type CustomerStore interface {
 	GetConfig(customerID string) (model.Config, error)
 	GetPlugins(customerID string) ([]CustomerPluginValues, error)
 
-	UpdateCustomer(customer Customer, userID string) error
+	UpdateCustomer(customer Customer) error
 	UpdateCustomerData(customerID string, userID string, packet *CustomerPacketValues, config *model.Config, plugins []CustomerPluginValues) error
 
 	UpdateCustomerThroughUpload(customerID string, packet *model.SupportPacket, config *model.Config, plugins *model.PluginsResponse) error

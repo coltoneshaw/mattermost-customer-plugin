@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS crm_audit (
 	updatedBy TEXT NOT NULL,
 	updatedAt BIGINT NOT NULL,
 	updateType TEXT NOT NULL,
-	path TEXT NOT NULL
+	path TEXT NOT NULL,
+	diff JSONB NOT NULL
 );

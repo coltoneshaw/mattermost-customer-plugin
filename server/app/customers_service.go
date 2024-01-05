@@ -25,8 +25,8 @@ func (s *customerService) GetCustomers(opts CustomerFilterOptions) (GetCustomers
 	return s.store.GetCustomers(opts)
 }
 
-func (s *customerService) UpdateCustomer(customer Customer, userID string) error {
-	return s.store.UpdateCustomer(customer, userID)
+func (s *customerService) UpdateCustomer(customer Customer) error {
+	return s.store.UpdateCustomer(customer)
 }
 
 func (s *customerService) UpdateCustomerData(customerID string, userID string, packet *CustomerPacketValues, config *model.Config, plugins []CustomerPluginValues) error {

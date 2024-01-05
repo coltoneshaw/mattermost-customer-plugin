@@ -333,7 +333,7 @@ func TestUpdateCustomer(t *testing.T) {
 
 		customer.ID = customerID
 
-		err = customerStore.UpdateCustomer(customer, "test")
+		err = customerStore.UpdateCustomer(customer)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost/server/public/model"
-
 	pluginapi "github.com/mattermost/mattermost/server/public/pluginapi"
 )
 

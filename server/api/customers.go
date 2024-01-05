@@ -91,7 +91,7 @@ func (h *CustomerHandler) getCustomer(c *Context, w http.ResponseWriter, r *http
 
 func (h *CustomerHandler) updateCustomer(c *Context, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userID := r.Header.Get("Mattermost-User-ID")
+	// userID := r.Header.Get("Mattermost-User-ID")
 	var customer app.Customer
 	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
 		h.HandleErrorWithCode(w, c.logger, http.StatusBadRequest, "unable to decode customer", err)
@@ -99,7 +99,7 @@ func (h *CustomerHandler) updateCustomer(c *Context, w http.ResponseWriter, r *h
 	}
 
 	customer.ID = vars["id"]
-	err := h.customerService.UpdateCustomer(customer, userID)
+	err := h.customerService.UpdateCustomer(customer)
 	if err != nil {
 		h.HandleError(w, c.logger, err)
 		return
@@ -122,6 +122,12 @@ func (h *CustomerHandler) updateCustomerConfig(c *Context, w http.ResponseWriter
 		h.HandleErrorWithCode(w, c.logger, http.StatusBadRequest, "unable to decode customer config", err)
 		return
 	}
+
+	// need to validate config here. When i attempted to do it I keep getting a nil pointer dereference, with valid and non valid config.
+	// if err := config.IsValid(); err != nil {
+	// 	h.HandleErrorWithCode(w, c.logger, http.StatusBadRequest, "invalid config", err)
+	// 	return
+	// }
 
 	customerID := vars["id"]
 	err := h.customerService.UpdateCustomerData(customerID, userID, nil, &config, nil)
