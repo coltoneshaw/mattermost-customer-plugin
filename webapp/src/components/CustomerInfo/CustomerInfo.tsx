@@ -3,7 +3,7 @@ import {Route, useParams} from 'react-router-dom';
 
 import {Customer, FullCustomerInfo} from '@/types/customers';
 
-import {clientFetchCustomerByID, updateCustomer, updateCustomerConfig} from '@/client';
+import {clientFetchCustomerByID, updateCustomer, updateCustomerConfig, updateCustomerPlugins} from '@/client';
 
 import {CenteredText} from '../CenteredText';
 
@@ -59,24 +59,39 @@ const CustomerInfo = () => {
 
     const {config, plugins, packet, ...info} = customer;
 
+    const handleRes = (res: FullCustomerInfo | undefined) => {
+        if (!res) {
+            return;
+        }
+        setCustomer(res);
+    };
+
     const update = (c: Customer) => {
         updateCustomer(c.id, c).
-            then((res) => {
-                if (!res) {
-                    return;
-                }
-                setCustomer(res);
-            });
+            then(handleRes);
     };
 
     const saveConfig = (conf: typeof config) => {
         updateCustomerConfig(id, conf).
-            then((res) => {
-                if (!res) {
-                    return;
-                }
-                setCustomer(res);
-            });
+            then(handleRes);
+    };
+
+    const updatePlugin = (pluginID: string, isActive: boolean) => {
+        updateCustomerPlugins(id, plugins.map((p) => {
+            if (p.pluginID === pluginID) {
+                return {
+                    ...p,
+                    isActive,
+                };
+            }
+            return p;
+        })).
+            then(handleRes);
+    };
+
+    const deletePlugin = (pluginID: string) => {
+        updateCustomerPlugins(id, plugins.filter((p) => p.pluginID !== pluginID)).
+            then(handleRes);
     };
 
     return (
@@ -104,6 +119,8 @@ const CustomerInfo = () => {
             <Route path='/customers/:id/plugins'>
                 <CustomerInfoPlugins
                     plugins={plugins}
+                    changeState={updatePlugin}
+                    deletePlugin={deletePlugin}
                 />
             </Route>
             <Route

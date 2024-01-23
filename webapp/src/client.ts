@@ -96,6 +96,6 @@ export function updateCustomerPacket(customerID: string, packet: Partial<Custome
     return doPut<FullCustomerInfo>(`${apiUrl}/customers/${customerID}/packet`, packet);
 }
 
-export function updateCustomerPlugins(customerID: string, plugins: Partial<CustomerPluginValues>) {
+export function updateCustomerPlugins(customerID: string, plugins: Partial<CustomerPluginValues>[]) {
     return doPut<FullCustomerInfo>(`${apiUrl}/customers/${customerID}/plugins`, plugins);
 }
