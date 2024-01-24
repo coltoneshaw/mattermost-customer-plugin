@@ -77,9 +77,16 @@ const CustomerInfoProfile = ({
             salesforceId: '',
             siteURL: '',
             technicalAccountManager: '',
-            type: '',
+            licenseType: '',
             zendeskId: '',
             lastUpdated: 0,
+            airGapped: false,
+            airGappedReason: '',
+            codeWord: '',
+            companyType: '',
+            productManager: '',
+            region: '',
+            status: '',
         },
     });
 
@@ -121,7 +128,7 @@ const CustomerInfoProfile = ({
                 <FormDropdown
                     getInputProps={getInputProps}
                     label={'License Type'}
-                    formKey={'type'}
+                    formKey={'licenseType'}
                     data={[
                         {value: LicenseType.Enterprise, label: 'Enterprise'},
                         {value: LicenseType.Professional, label: 'Professional'},

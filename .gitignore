@@ -12,3 +12,5 @@ webapp/src/manifest.ts
 server/manifest.go
 
 coverage.out
+
+.env
