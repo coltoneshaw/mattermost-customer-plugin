@@ -19,4 +19,5 @@ export const Container = styled.div`
     overflow-y: auto;
     gap: 1em;
     padding: 1em;
+    position: relative;
 `;

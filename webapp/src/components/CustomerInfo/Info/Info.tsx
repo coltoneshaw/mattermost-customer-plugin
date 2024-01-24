@@ -1,61 +1,17 @@
 import React, {useEffect} from 'react';
 
-import {TextInput} from '@mantine/core';
-
-import {UseFormReturnType, useForm} from '@mantine/form';
+import {useForm} from '@mantine/form';
 
 import {Customer, LicenseType} from '@/types/customers';
 import {CenteredText} from '@/components/CenteredText';
 
 import {Group, Container} from '@/components/Group';
 
+import {FormDropdown} from '../../form/FormDropdown';
+
+import {FormTextInput} from '@/components/form/FormTextInput';
+
 import {FormUserSelector} from './ProfileSelector';
-import {FormDropdown} from './CustomerTypeSelector';
-
-export type FormTextInputParams = {
-    getInputProps: UseFormReturnType<Customer, (values: Customer) => Customer>['getInputProps'];
-    label: string;
-    placeholder?: string;
-    formKey: keyof Customer;
-}
-
-const FormTextInput = ({
-    getInputProps,
-    label,
-    placeholder,
-    formKey,
-}: FormTextInputParams) => {
-    return (
-        <TextInput
-            bg={'transparent'}
-            sx={{
-                width: '100%',
-                label: {
-                    fontSize: '14px',
-                    fontWeight: 600,
-                },
-                input: {
-                    height: '34px',
-                    color: 'var(--center-channel-color)',
-                    background: 'var(--center-channel-bg)',
-                    border: '1px solid #ccc',
-                    padding: '6px 12px',
-                    borderColor: 'rgba(var(--center-channel-color-rgb), 0.16)',
-                    borderRadius: '4px',
-                    lineHeight: '1.42857143',
-                    transition: 'border-color ease-in-out .15s, box-shadow ease-in-out .15s, -webkit-box-shadow ease-in-out .15s',
-                    '&:focus': {
-                        borderColor: 'rgba(var(--button-bg-rgb), 1)',
-                        boxShadow: '0 0 0 1px var(--button-bg)',
-                    },
-                },
-            }}
-            placeholder={placeholder || label}
-            label={label}
-            {...getInputProps(formKey)}
-        />
-    );
-};
 
 type Params = {
     customer: Customer | null;
@@ -90,6 +46,7 @@ const CustomerInfoProfile = ({
         },
     });
 
+    // resetting the form is anything new comes in.
     useEffect(() => {
         if (customer) {
             setValues(customer);
@@ -121,7 +78,7 @@ const CustomerInfoProfile = ({
             <Container>
                 <FormTextInput
                     getInputProps={getInputProps}
-                    label={isDirty() ? 'Customer Name (Unsaved Changes)' : 'Customer Name'}
+                    label={'Customer Name'}
                     placeholder={'Customer Name'}
                     formKey={'name'}
                 />
