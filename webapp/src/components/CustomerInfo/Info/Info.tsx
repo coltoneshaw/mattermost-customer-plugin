@@ -7,7 +7,7 @@ import {CenteredText} from '@/components/CenteredText';
 
 import {Group, Container} from '@/components/Group';
 
-import {FormDropdown} from '../../form/FormDropdown';
+import {FormSelect} from '../../form/FormDropdown';
 
 import {FormTextInput} from '@/components/form/FormTextInput';
 
@@ -82,7 +82,7 @@ const CustomerInfoProfile = ({
                     placeholder={'Customer Name'}
                     formKey={'name'}
                 />
-                <FormDropdown
+                <FormSelect
                     getInputProps={getInputProps}
                     label={'License Type'}
                     formKey={'licenseType'}

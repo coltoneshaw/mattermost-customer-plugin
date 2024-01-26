@@ -5,12 +5,14 @@ type ItemParams = {
     value: string;
     editing?: boolean;
     editComponent?: React.ReactNode;
+    type: 'string' | 'number';
 }
 const Item = ({
     title,
     value,
     editing,
     editComponent,
+    type,
 }: ItemParams) => {
     return (
         <div
@@ -35,7 +37,11 @@ const Item = ({
                 {title + ':'}
             </span>
             {
-                editing ? <div style={{flex: 2}}>{editComponent}</div> : <span>{value}</span>
+                editing ? (
+                    <div style={{flex: 2}}>{editComponent}</div>
+                ) : (
+                    <span>{(type === 'string') ? value : Number(value).toLocaleString() }</span>
+                )
             }
         </div>
     );

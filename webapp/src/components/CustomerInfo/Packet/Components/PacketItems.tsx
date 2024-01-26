@@ -6,7 +6,13 @@ import {CustomerPacketValues} from '@/types/customers';
 
 import {FormTextInput} from '@/components/form/FormTextInput';
 
-import {FormDropdown} from '@/components/form/FormDropdown';
+import {FormSelect} from '@/components/form/FormDropdown';
+
+import {FormNumberInput} from '@/components/form/FormNumberInput';
+
+import {FormMultiSelect} from '@/components/form/FormMultiSelect';
+
+import {parseJson} from '@/helpers/general';
 
 import {Item} from './Item';
 
@@ -33,7 +39,6 @@ export const transformKeys: Record<keyof CustomerPacketValues, string> = {
     elasticServerVersion: 'Elastic Server Version',
     fileDriver: 'File Driver',
     hostingType: 'Hosting Type',
-    metrics: 'Metrics',
     metricService: 'Metric Service',
     samlProvider: 'SAML Provider',
     version: 'Version',
@@ -64,13 +69,12 @@ export const defaultPacket: CustomerPacketValues = {
     elasticServerVersion: '',
     fileDriver: '',
     hostingType: '',
-    metrics: false,
     metricService: '',
     samlProvider: '',
     version: '',
     mobileApp: '',
     licensedTo: '',
-    productsInUse: '',
+    productsInUse: [],
 };
 
 type PacketContextType = {
@@ -102,50 +106,82 @@ export const PacketProvider: React.FC<{
         </PacketContext.Provider>
     );
 };
-export const LicensedTo = () => {
-    const {packet: {licensedTo}, editing, getInputProps} = useContext(PacketContext);
-    const title = transformKeys.licensedTo;
-    const value = licensedTo;
 
+export const PacketTextInput = ({
+    packetKey,
+}: {packetKey: keyof CustomerPacketValues}) => {
+    const {packet, editing, getInputProps} = useContext(PacketContext);
+    const title = transformKeys[packetKey];
+    const value = String(packet[packetKey]);
     return (
         <Item
             title={title}
             value={value}
+            type='string'
             editing={editing}
             editComponent={
                 <FormTextInput
-                    formKey={'licensedTo'}
+                    formKey={packetKey}
                     getInputProps={getInputProps}
-                    key={'licensedTo'}
-                    placeholder={value}
+                    key={packetKey}
+                    placeholder={title}
                 />
             }
         />
     );
 };
+export const PacketNumberField = ({
+    packetKey,
+} : {packetKey: keyof CustomerPacketValues}) => {
+    const {packet, editing, getInputProps} = useContext(PacketContext);
 
-export const MobileApp = () => {
-    const {packet: {mobileApp}, editing, getInputProps} = useContext(PacketContext);
-
-    const title = transformKeys.mobileApp;
-    const value = mobileApp;
+    const title = transformKeys[packetKey];
+    const value = String(packet[packetKey]);
     return (
         <Item
             title={title}
             value={value}
-            editing={editing}
+            type='string'
             editComponent={
-                <FormDropdown
-                    formKey={'mobileApp'}
+                <FormNumberInput
+                    formKey={packetKey}
                     getInputProps={getInputProps}
-                    key={'mobileApp'}
-                    placeholder={value}
-                    data={[
-                        {value: 'true', label: 'true'},
-                        {value: 'false', label: 'false'},
-                    ]}
+                    key={packetKey}
+                    placeholder={title}
                 />
             }
+            editing={editing}
+        />
+    );
+};
+
+type PacketMultiSelectParams = {
+    packetKey: keyof CustomerPacketValues,
+    data: {value: string, label: string}[]
+}
+export const PacketSelect = ({
+    packetKey,
+    data,
+} : PacketMultiSelectParams) => {
+    const {packet, editing, getInputProps} = useContext(PacketContext);
+
+    const title = transformKeys[packetKey];
+    const value = String(packet[packetKey]);
+    return (
+        <Item
+            title={title}
+            value={value}
+            type='string'
+            editComponent={
+                <FormSelect
+                    formKey={packetKey}
+                    getInputProps={getInputProps}
+                    key={packetKey}
+                    placeholder={title}
+                    data={data}
+                />
+            }
+            editing={editing}
         />
     );
 };
@@ -155,20 +191,27 @@ export const ProductsInUse = () => {
 
     const title = transformKeys.productsInUse;
     const value = productsInUse;
+
     return (
         <Item
             title={title}
-            value={value}
+            value={String(value)}
+            type='string'
             editComponent={
-                <FormTextInput
+                <FormMultiSelect
                     formKey={'productsInUse'}
                     getInputProps={getInputProps}
                     key={'productsInUse'}
-                    placeholder={value}
+                    placeholder={title}
+                    value={parseJson<string[]>(getInputProps('productsInUse').value)}
+                    data={[
+                        {value: 'calls', label: 'Calls'},
+                        {value: 'playbooks', label: 'Playbooks'},
+                        {value: 'boards', label: 'Boards'},
+                    ]}
                 />
             }
             editing={editing}
         />
     );
 };
-

@@ -160,7 +160,6 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 			"cp.TotalPosts",
 			"cp.TotalChannels",
 			"cp.TotalTeams",
-			"cp.Metrics",
 			"cp.ElasticServerVersion",
 			"cp.MetricService",
 			"cp.HostingType",

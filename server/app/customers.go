@@ -57,14 +57,13 @@ type CustomerPacketValues struct {
 	TotalChannels         int    `json:"totalChannels"`
 	TotalTeams            int    `json:"totalTeams"`
 	ElasticServerVersion  string `json:"elasticServerVersion"`
-	Metrics               bool   `json:"metrics"` // This will be a true / false or string of what they're using.
 	MetricService         string `json:"metricService"`
 	HostingType           string `json:"hostingType"`    // aws, onprem, azure, cloud,
 	DeploymentType        string `json:"deploymentType"` // kube, tar, docker, AKS, EKS, GKE, etc
-	MobileApp             bool   `json:"mobileApp"`      // true, false, NA
-	ProductsInUse         string `json:"productsInUse"`  // calls, playbooks
-	SAMLProvider          string `json:"samlProvider"`   // Name of their SAML technology
-	LDAPProvider          string `json:"ldapProvider"`   // Name of their LDAP technology
+	MobileApp             string `json:"mobileApp"`
+	ProductsInUse         string `json:"productsInUse"` // calls, playbooks
+	SAMLProvider          string `json:"samlProvider"`  // Name of their SAML technology
+	LDAPProvider          string `json:"ldapProvider"`  // Name of their LDAP technology
 }
 
 type CustomerPluginValues struct {

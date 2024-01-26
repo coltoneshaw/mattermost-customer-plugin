@@ -52,12 +52,11 @@ export type CustomerPacketValues = {
     totalChannels: number;
     totalTeams: number;
     elasticServerVersion: string;
-    metrics: boolean;
     metricService: string;
     hostingType: string;
     deploymentType: string;
     mobileApp: string;
-    productsInUse: string;
+    productsInUse: string[];
     samlProvider: string;
     ldapProvider: string;
 }

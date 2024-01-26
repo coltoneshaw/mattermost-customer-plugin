@@ -11,7 +11,11 @@ const FormMultiSelect = <T, >({
     placeholder,
     formKey,
     data,
-}: FormTextInputParams<T> & { data: { value: string, label: string }[]},
+    value,
+}: FormTextInputParams<T> & {
+    data: { value: string, label: string }[],
+    value?: string[],
+},
 ) => {
     const {classes} = formSelectInputStyles();
     return (
@@ -24,6 +28,7 @@ const FormMultiSelect = <T, >({
             label={label}
             data={data}
             {...getInputProps(formKey)}
+            value={value || getInputProps(formKey).value}
         />
     );
 };

@@ -3,7 +3,7 @@ import {Route, useParams} from 'react-router-dom';
 
 import {Customer, FullCustomerInfo} from '@/types/customers';
 
-import {clientFetchCustomerByID, updateCustomer, updateCustomerConfig, updateCustomerPlugins} from '@/client';
+import {clientFetchCustomerByID, updateCustomer, updateCustomerConfig, updateCustomerPacket, updateCustomerPlugins} from '@/client';
 
 import {CenteredText} from '../CenteredText';
 
@@ -94,6 +94,11 @@ const CustomerInfo = () => {
             then(handleRes);
     };
 
+    const updatePacket = (p: typeof packet) => {
+        updateCustomerPacket(id, p).
+            then(handleRes);
+    };
+
     return (
         <>
             <RHSTitle>
@@ -114,6 +119,7 @@ const CustomerInfo = () => {
             <Route path='/customers/:id/packet'>
                 <CustomerInfoPacket
                     packet={packet}
+                    save={updatePacket}
                 />
             </Route>
             <Route path='/customers/:id/plugins'>

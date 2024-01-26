@@ -20,11 +20,10 @@ CREATE TABLE IF NOT EXISTS crm_packetValues (
 	TotalChannels BIGINT NOT NULL,
 	TotalTeams INTEGER NOT NULL,
 	ElasticServerVersion TEXT NOT NULL,
-	Metrics BOOLEAN NOT NULL,
 	MetricService TEXT NOT NULL,
 	HostingType TEXT NOT NULL,
 	DeploymentType TEXT NOT NULL,
-	MobileApp BOOLEAN NOT NULL,
+	MobileApp TEXT NOT NULL,
   ProductsInUse TEXT NOT NULL,
 	SAMLProvider TEXT NOT NULL,
 	LDAPProvider TEXT NOT NULL

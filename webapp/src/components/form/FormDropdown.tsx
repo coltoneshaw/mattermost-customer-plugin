@@ -5,7 +5,7 @@ import {Select} from '@mantine/core';
 import {FormTextInputParams} from './types';
 import {formSelectInputStyles} from './styles';
 
-const FormDropdown = <T, >({
+const FormSelect = <T, >({
     getInputProps,
     label,
     placeholder,
@@ -29,5 +29,5 @@ const FormDropdown = <T, >({
 };
 
 export {
-    FormDropdown,
+    FormSelect,
 };

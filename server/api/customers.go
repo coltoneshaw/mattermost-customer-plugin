@@ -155,6 +155,7 @@ func (h *CustomerHandler) updateCustomerPacket(c *Context, w http.ResponseWriter
 	}
 
 	customerID := vars["id"]
+
 	err := h.customerService.UpdateCustomerData(customerID, userID, &packet, nil, nil)
 	if err != nil {
 		h.HandleError(w, c.logger, err)

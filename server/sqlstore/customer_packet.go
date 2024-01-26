@@ -96,7 +96,6 @@ func (s *customerStore) storePacket(userID string, customerID string, packet *ap
 			"TotalChannels":         packet.TotalChannels,
 			"TotalTeams":            packet.TotalTeams,
 			"ElasticServerVersion":  packet.ElasticServerVersion,
-			"Metrics":               packet.Metrics,
 			"MetricService":         packet.MetricService,
 			"HostingType":           packet.HostingType,
 			"DeploymentType":        packet.DeploymentType,

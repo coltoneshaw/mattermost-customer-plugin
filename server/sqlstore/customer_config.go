@@ -81,7 +81,7 @@ func (s *customerStore) storeConfig(userID string, customerID string, config *mo
 		return errors.Wrap(err, "failed to set old config inactive")
 	}
 
-	// updating site url in the customer table to always keep it up to date
+	// taking the site url from the config and storing it in the customer table for matching later.
 	_, err = s.store.execBuilder(s.store.db, sq.
 		Update(customerTable).
 		SetMap(map[string]interface{}{
