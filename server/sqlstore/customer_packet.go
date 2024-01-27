@@ -2,6 +2,7 @@ package sqlstore
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/coltoneshaw/mattermost-plugin-customers/server/app"
 	"github.com/mattermost/mattermost/server/public/model"
@@ -37,6 +38,11 @@ func (s *customerStore) GetPacket(customerID string) (app.CustomerPacketValues, 
 
 	if err = tx.Commit(); err != nil {
 		return app.CustomerPacketValues{}, errors.Wrap(err, "could not commit transaction")
+	}
+
+	rawPacket.ProductsInUse = []string{}
+	if rawPacket.ConcatenatedProductsInUse != "" {
+		rawPacket.ProductsInUse = strings.Split(rawPacket.ConcatenatedProductsInUse, ",")
 	}
 
 	return rawPacket.CustomerPacketValues, nil
@@ -75,34 +81,34 @@ func (s *customerStore) storePacket(userID string, customerID string, packet *ap
 	_, err = s.store.execBuilder(s.store.db, sq.
 		Insert(packetTable).
 		SetMap(map[string]interface{}{
-			"ID":                    newID,
-			"AuditID":               auditID,
-			"CustomerID":            customerID,
-			"Current":               true,
-			"LicensedTo":            packet.LicensedTo,
-			"Version":               packet.Version,
-			"ServerOS":              packet.ServerOS,
-			"ServerArch":            packet.ServerArch,
-			"DatabaseType":          packet.DatabaseType,
-			"DatabaseVersion":       packet.DatabaseVersion,
-			"DatabaseSchemaVersion": packet.DatabaseSchemaVersion,
-			"FileDriver":            packet.FileDriver,
-			"ActiveUsers":           packet.ActiveUsers,
-			"DailyActiveUsers":      packet.DailyActiveUsers,
-			"MonthlyActiveUsers":    packet.MonthlyActiveUsers,
-			"InactiveUserCount":     packet.InactiveUserCount,
-			"LicenseSupportedUsers": packet.LicenseSupportedUsers,
-			"TotalPosts":            packet.TotalPosts,
-			"TotalChannels":         packet.TotalChannels,
-			"TotalTeams":            packet.TotalTeams,
-			"ElasticServerVersion":  packet.ElasticServerVersion,
-			"MetricService":         packet.MetricService,
-			"HostingType":           packet.HostingType,
-			"DeploymentType":        packet.DeploymentType,
-			"MobileApp":             packet.MobileApp,
-			"ProductsInUse":         packet.ProductsInUse,
-			"SAMLProvider":          packet.SAMLProvider,
-			"LDAPProvider":          packet.LDAPProvider,
+			"ID":                        newID,
+			"AuditID":                   auditID,
+			"CustomerID":                customerID,
+			"Current":                   true,
+			"LicensedTo":                packet.LicensedTo,
+			"Version":                   packet.Version,
+			"ServerOS":                  packet.ServerOS,
+			"ServerArch":                packet.ServerArch,
+			"DatabaseType":              packet.DatabaseType,
+			"DatabaseVersion":           packet.DatabaseVersion,
+			"DatabaseSchemaVersion":     packet.DatabaseSchemaVersion,
+			"FileDriver":                packet.FileDriver,
+			"ActiveUsers":               packet.ActiveUsers,
+			"DailyActiveUsers":          packet.DailyActiveUsers,
+			"MonthlyActiveUsers":        packet.MonthlyActiveUsers,
+			"InactiveUserCount":         packet.InactiveUserCount,
+			"LicenseSupportedUsers":     packet.LicenseSupportedUsers,
+			"TotalPosts":                packet.TotalPosts,
+			"TotalChannels":             packet.TotalChannels,
+			"TotalTeams":                packet.TotalTeams,
+			"ElasticServerVersion":      packet.ElasticServerVersion,
+			"MetricService":             packet.MetricService,
+			"HostingType":               packet.HostingType,
+			"DeploymentType":            packet.DeploymentType,
+			"MobileApp":                 packet.MobileApp,
+			"ConcatenatedProductsInUse": strings.Join(packet.ProductsInUse, ","),
+			"SAMLProvider":              packet.SAMLProvider,
+			"LDAPProvider":              packet.LDAPProvider,
 		}))
 
 	if err != nil {

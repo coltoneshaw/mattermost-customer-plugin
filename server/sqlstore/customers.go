@@ -29,6 +29,7 @@ type sqlCustomers struct {
 
 type sqlPacket struct {
 	app.CustomerPacketValues
+	ConcatenatedProductsInUse string
 }
 
 type sqlConfig struct {
@@ -165,7 +166,7 @@ func NewCustomerStore(pluginAPI PluginAPIClient, sqlStore *SQLStore) app.Custome
 			"cp.HostingType",
 			"cp.DeploymentType",
 			"cp.MobileApp",
-			"cp.ProductsInUse",
+			"cp.ConcatenatedProductsInUse",
 			"cp.SAMLProvider",
 			"cp.LDAPProvider",
 		).

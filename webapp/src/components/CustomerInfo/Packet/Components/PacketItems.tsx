@@ -190,12 +190,12 @@ export const ProductsInUse = () => {
     const {packet: {productsInUse}, editing, getInputProps} = useContext(PacketContext);
 
     const title = transformKeys.productsInUse;
-    const value = productsInUse;
+    const value = productsInUse.join(', ');
 
     return (
         <Item
             title={title}
-            value={String(value)}
+            value={value}
             type='string'
             editComponent={
                 <FormMultiSelect

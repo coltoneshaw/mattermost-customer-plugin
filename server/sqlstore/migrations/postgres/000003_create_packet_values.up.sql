@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS crm_packetValues (
 	HostingType TEXT NOT NULL,
 	DeploymentType TEXT NOT NULL,
 	MobileApp TEXT NOT NULL,
-  ProductsInUse TEXT NOT NULL,
+  ConcatenatedProductsInUse TEXT NOT NULL,
 	SAMLProvider TEXT NOT NULL,
 	LDAPProvider TEXT NOT NULL
 );

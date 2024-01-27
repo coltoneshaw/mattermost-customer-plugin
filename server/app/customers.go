@@ -40,30 +40,30 @@ type Customer struct {
 // todo - modify the licnesedTo to match mattermost with licenseto
 type CustomerPacketValues struct {
 	// AuditID               string `json:"auditID"`
-	LicensedTo            string `json:"licensedTo"`
-	Version               string `json:"version"`
-	ServerOS              string `json:"serverOS"`
-	ServerArch            string `json:"serverArch"`
-	DatabaseType          string `json:"databaseType"` // `mysql` or `postgres`
-	DatabaseVersion       string `json:"databaseVersion"`
-	DatabaseSchemaVersion string `json:"databaseSchemaVersion"`
-	FileDriver            string `json:"fileDriver"`
-	ActiveUsers           int    `json:"activeUsers"`
-	DailyActiveUsers      int    `json:"dailyActiveUsers"`
-	MonthlyActiveUsers    int    `json:"monthlyActiveUsers"`
-	InactiveUserCount     int    `json:"inactiveUserCount"`
-	LicenseSupportedUsers int    `json:"licenseSupportedUsers"`
-	TotalPosts            int    `json:"totalPosts"`
-	TotalChannels         int    `json:"totalChannels"`
-	TotalTeams            int    `json:"totalTeams"`
-	ElasticServerVersion  string `json:"elasticServerVersion"`
-	MetricService         string `json:"metricService"`
-	HostingType           string `json:"hostingType"`    // aws, onprem, azure, cloud,
-	DeploymentType        string `json:"deploymentType"` // kube, tar, docker, AKS, EKS, GKE, etc
-	MobileApp             string `json:"mobileApp"`
-	ProductsInUse         string `json:"productsInUse"` // calls, playbooks
-	SAMLProvider          string `json:"samlProvider"`  // Name of their SAML technology
-	LDAPProvider          string `json:"ldapProvider"`  // Name of their LDAP technology
+	LicensedTo            string   `json:"licensedTo"`
+	Version               string   `json:"version"`
+	ServerOS              string   `json:"serverOS"`
+	ServerArch            string   `json:"serverArch"`
+	DatabaseType          string   `json:"databaseType"` // `mysql` or `postgres`
+	DatabaseVersion       string   `json:"databaseVersion"`
+	DatabaseSchemaVersion string   `json:"databaseSchemaVersion"`
+	FileDriver            string   `json:"fileDriver"`
+	ActiveUsers           int      `json:"activeUsers"`
+	DailyActiveUsers      int      `json:"dailyActiveUsers"`
+	MonthlyActiveUsers    int      `json:"monthlyActiveUsers"`
+	InactiveUserCount     int      `json:"inactiveUserCount"`
+	LicenseSupportedUsers int      `json:"licenseSupportedUsers"`
+	TotalPosts            int      `json:"totalPosts"`
+	TotalChannels         int      `json:"totalChannels"`
+	TotalTeams            int      `json:"totalTeams"`
+	ElasticServerVersion  string   `json:"elasticServerVersion"`
+	MetricService         string   `json:"metricService"`
+	HostingType           string   `json:"hostingType"`    // aws, onprem, azure, cloud,
+	DeploymentType        string   `json:"deploymentType"` // kube, tar, docker, AKS, EKS, GKE, etc
+	MobileApp             string   `json:"mobileApp"`
+	ProductsInUse         []string `json:"productsInUse"` // calls, playbooks
+	SAMLProvider          string   `json:"samlProvider"`  // Name of their SAML technology
+	LDAPProvider          string   `json:"ldapProvider"`  // Name of their LDAP technology
 }
 
 type CustomerPluginValues struct {
